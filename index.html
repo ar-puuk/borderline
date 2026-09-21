@@ -116,9 +116,27 @@
       </fieldset>
 
       <fieldset id="state-picker-field" class="field-group" hidden>
-        <legend>Pick a state</legend>
-        <div class="select-wrap">
-          <select id="state-picker" aria-label="State to play counties for"></select>
+        <legend id="state-picker-legend">Pick a state</legend>
+        <div class="select-wrap" id="state-picker-wrap">
+          <button
+            type="button"
+            id="state-picker-btn"
+            class="select-btn"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-controls="state-picker-list"
+            aria-labelledby="state-picker-legend state-picker-label"
+          >
+            <span id="state-picker-label">Alabama</span>
+          </button>
+          <ul
+            id="state-picker-list"
+            class="select-list"
+            role="listbox"
+            tabindex="-1"
+            aria-labelledby="state-picker-legend"
+            hidden
+          ></ul>
         </div>
       </fieldset>
 

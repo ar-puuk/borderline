@@ -11,7 +11,10 @@ const els = {
   modeButtons: Array.from(document.querySelectorAll("[data-mode]")),
   difficultyButtons: Array.from(document.querySelectorAll("[data-difficulty]")),
   statePickerField: document.getElementById("state-picker-field"),
-  statePicker: document.getElementById("state-picker"),
+  statePickerWrap: document.getElementById("state-picker-wrap"),
+  statePickerBtn: document.getElementById("state-picker-btn"),
+  statePickerLabel: document.getElementById("state-picker-label"),
+  statePickerList: document.getElementById("state-picker-list"),
   roundsRow: document.getElementById("rounds-row"),
   roundButtons: Array.from(document.querySelectorAll("[data-rounds]")),
   bestScoreNote: document.getElementById("best-score-note"),
@@ -69,12 +72,112 @@ function announce(text) {
 
 function populateStatePicker() {
   const names = state.mapData.playableStates.map((s) => s.name).sort();
-  els.statePicker.innerHTML = names
-    .map((n) => `<option value="${n}">${n}</option>`)
+  els.statePickerList.innerHTML = names
+    .map(
+      (n, i) =>
+        `<li role="option" id="state-opt-${i}" class="select-option" data-value="${n}" aria-selected="false">${n}</li>`
+    )
     .join("");
   if (!state.stateName) state.stateName = names[0];
-  els.statePicker.value = state.stateName;
+  selectState(state.stateName);
 }
+
+function selectState(name) {
+  state.stateName = name;
+  els.statePickerLabel.textContent = name;
+  for (const li of els.statePickerList.children) {
+    li.setAttribute("aria-selected", String(li.dataset.value === name));
+  }
+}
+
+function setActiveStateOption(li) {
+  const prev = els.statePickerList.querySelector(".is-active");
+  if (prev) prev.classList.remove("is-active");
+  if (!li) return;
+  li.classList.add("is-active");
+  els.statePickerList.setAttribute("aria-activedescendant", li.id);
+  li.scrollIntoView({ block: "nearest" });
+}
+
+function openStatePicker() {
+  els.statePickerList.hidden = false;
+  els.statePickerBtn.setAttribute("aria-expanded", "true");
+  const current =
+    els.statePickerList.querySelector(`[data-value="${CSS.escape(state.stateName)}"]`) ||
+    els.statePickerList.firstElementChild;
+  setActiveStateOption(current);
+  els.statePickerList.focus();
+  document.addEventListener("pointerdown", onStatePickerOutsideClick, true);
+}
+
+function closeStatePicker() {
+  els.statePickerList.hidden = true;
+  els.statePickerBtn.setAttribute("aria-expanded", "false");
+  document.removeEventListener("pointerdown", onStatePickerOutsideClick, true);
+}
+
+function onStatePickerOutsideClick(e) {
+  if (!els.statePickerWrap.contains(e.target)) closeStatePicker();
+}
+
+let statePickerTypeahead = "";
+let statePickerTypeaheadTimer = null;
+
+els.statePickerBtn.addEventListener("click", () => {
+  if (els.statePickerList.hidden) openStatePicker();
+  else closeStatePicker();
+});
+
+els.statePickerList.addEventListener("click", (e) => {
+  const li = e.target.closest("[role='option']");
+  if (!li) return;
+  selectState(li.dataset.value);
+  updateRoundsAvailability();
+  closeStatePicker();
+  els.statePickerBtn.focus();
+});
+
+els.statePickerList.addEventListener("keydown", (e) => {
+  const options = Array.from(els.statePickerList.children);
+  const activeId = els.statePickerList.getAttribute("aria-activedescendant");
+  let idx = options.findIndex((o) => o.id === activeId);
+
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    setActiveStateOption(options[Math.min(options.length - 1, idx + 1)]);
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    setActiveStateOption(options[Math.max(0, idx - 1)]);
+  } else if (e.key === "Home") {
+    e.preventDefault();
+    setActiveStateOption(options[0]);
+  } else if (e.key === "End") {
+    e.preventDefault();
+    setActiveStateOption(options[options.length - 1]);
+  } else if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    if (idx >= 0) {
+      selectState(options[idx].dataset.value);
+      updateRoundsAvailability();
+    }
+    closeStatePicker();
+    els.statePickerBtn.focus();
+  } else if (e.key === "Escape") {
+    e.preventDefault();
+    closeStatePicker();
+    els.statePickerBtn.focus();
+  } else if (e.key === "Tab") {
+    closeStatePicker();
+  } else if (e.key.length === 1 && /[a-z0-9]/i.test(e.key)) {
+    clearTimeout(statePickerTypeaheadTimer);
+    statePickerTypeahead += e.key.toLowerCase();
+    statePickerTypeaheadTimer = setTimeout(() => (statePickerTypeahead = ""), 600);
+    const startIdx = (idx + 1) % options.length;
+    const ordered = [...options.slice(startIdx), ...options.slice(0, startIdx)];
+    const match = ordered.find((o) => o.textContent.toLowerCase().startsWith(statePickerTypeahead));
+    if (match) setActiveStateOption(match);
+  }
+});
 
 function currentPoolLength() {
   if (!state.mapData) return 0;
@@ -156,10 +259,6 @@ els.difficultyButtons.forEach((btn) =>
 els.roundButtons.forEach((btn) =>
   btn.addEventListener("click", () => selectRoundLabel(btn.dataset.rounds))
 );
-els.statePicker.addEventListener("change", () => {
-  state.stateName = els.statePicker.value;
-  updateRoundsAvailability();
-});
 els.btnPlay.addEventListener("click", () => startGame());
 els.btnChangeMode.addEventListener("click", () => {
   updateBestScoreNote();
