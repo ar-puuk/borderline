@@ -94,6 +94,22 @@ module.exports = async function urlSetupTests(browser, baseUrl) {
     await page.close();
   }
 
+  // --- rounds= is omitted from any generated URL while Blitz is selected ---
+  // A rounds count paired with timed=1 reads as contradictory (Blitz always
+  // plays until the clock or the pool runs out, ignoring round count), so
+  // it shouldn't appear in the address bar or a copied link while active.
+  {
+    const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+    await page.goto(`${baseUrl}/index.html`, { waitUntil: "networkidle" });
+    await page.click('[data-rounds="10"]');
+    await page.click('[data-timed="on"]');
+    const params = new URLSearchParams(await page.evaluate(() => window.location.search));
+    assert(params.get("timed") === "1", "address bar should reflect timed=1");
+    assert(params.get("rounds") === null, "address bar should not include rounds= while Blitz is selected");
+    console.log("  rounds= is omitted from the address bar while Blitz is selected: OK");
+    await page.close();
+  }
+
   // --- Copy link to this setup copies a URL that reproduces it ---
   {
     const context = await browser.newContext({

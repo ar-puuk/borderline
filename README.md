@@ -85,7 +85,7 @@ fall back to the normal defaults):
 | `difficulty` | `easy`, `hard` | |
 | `timed` | `1` | Selects Blitz; omit for the normal round-count picker. |
 | `state` | e.g. `New-York` | Only used in Counties mode; spaces or dashes both work. |
-| `rounds` | `10`, `25`, `all` | Clamped the same way the start screen already clamps it. Ignored *while Blitz is running* (`timed=1` always plays until the clock or the pool runs out) - it only takes effect if the link's recipient switches back to Untimed, so the preference isn't lost either way. |
+| `rounds` | `10`, `25`, `all` | Clamped the same way the start screen already clamps it. Not included in any URL generated while Blitz is selected (`timed=1` always plays until the clock or the pool runs out, so pairing it with a round count would read as contradictory). |
 | `play` | `1` | Jumps straight into the game instead of just pre-filling the start screen. |
 
 For example, `?mode=counties&state=Texas&difficulty=hard&rounds=25&play=1`

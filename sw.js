@@ -1,4 +1,4 @@
-const CACHE_NAME = "borderline-v3";
+const CACHE_NAME = "borderline-v4";
 
 const APP_SHELL = [
   "./",
