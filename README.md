@@ -65,6 +65,32 @@ python3 -m http.server 8000
 
 Then open `http://localhost:8000/`.
 
+## Testing
+
+The site itself has zero dependencies, but there's a Playwright-driven
+regression suite in `tests/` (dev-only — `package.json` exists solely
+for this, nothing here is loaded by the shipped site):
+
+```sh
+npm install
+npm test
+```
+
+It spins up its own static server (no need to have one running
+already) and checks the things that actually broke during development:
+hit-testing accuracy across States mode and the trickiest County-mode
+states (Utah's projection tilt, Alaska's antimeridian crossing, Hawaii's
+scattered islands, Virginia's county/city name collisions), county
+label disambiguation, Delaware's round-count clamping, keyboard/touch
+input, Easy/Hard history persistence (verified by reading actual
+rendered canvas pixels, not just "did it crash"), theme/sound
+persistence, retry-missed, and pan/zoom hit-test correctness.
+
+A handful of counties have genuinely thin or scattered shapes (a few
+Virginia coastal counties, some Aleutian islands), so the county
+hit-test checks use a 60% floor rather than 100% — a real regression
+drops this to 0%, which is what the suite is actually there to catch.
+
 ## Deploying to GitHub Pages
 
 1. Push this repo to GitHub.
@@ -173,6 +199,8 @@ js/
   audio.js             synthesized hit/miss tones (Web Audio) + haptics
 data/                vendored TopoJSON (nationwide Albers + unprojected counties)
 vendor/              vendored, bundled topojson-client + d3-geo (ES modules), fonts
+tests/               dev-only Playwright regression suite (see Testing above)
+package.json         exists only to declare the Playwright dev dependency
 ```
 
 ## Accessibility
