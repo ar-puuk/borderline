@@ -85,7 +85,7 @@ const state = {
   game: null,
   isBlitzRound: false, // whether the in-progress/just-finished game is timed (retry sessions never are)
   blitzInterval: null,
-  blitzRemaining: 0,
+  blitzDeadline: null, // wall-clock Date.now() the round ends at, not a tick countdown
   awaitingConfirmation: false,
   advanceTimer: null,
   usingTypedInput: false, // whichever input method was used last becomes the one auto-focused each round
@@ -114,21 +114,28 @@ function showScreen(name, onVisible) {
     return;
   }
 
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    current.classList.remove("screen-leaving");
+    current.hidden = true;
+    target.hidden = false;
+    target.classList.add("screen-entering");
+    if (onVisible) onVisible();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => target.classList.remove("screen-entering"));
+    });
+  };
+
   current.classList.add("screen-leaving");
-  current.addEventListener(
-    "transitionend",
-    () => {
-      current.classList.remove("screen-leaving");
-      current.hidden = true;
-      target.hidden = false;
-      target.classList.add("screen-entering");
-      if (onVisible) onVisible();
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => target.classList.remove("screen-entering"));
-      });
-    },
-    { once: true }
-  );
+  current.addEventListener("transitionend", finish, { once: true });
+  // Safety net: a backgrounded/throttled tab can pause CSS transitions
+  // indefinitely (observed with Blitz's timeout firing while the tab isn't
+  // focused), and a transitionend that never fires would otherwise strand
+  // the UI on the old screen forever. Force the swap once the 220ms
+  // transition should clearly be done regardless of whether it announced it.
+  setTimeout(finish, 400);
 }
 
 function announce(text) {
@@ -500,21 +507,29 @@ function clearBlitzTimer() {
     clearInterval(state.blitzInterval);
     state.blitzInterval = null;
   }
+  state.blitzDeadline = null;
 }
 
 function startBlitzTimer() {
   clearBlitzTimer();
   if (!state.isBlitzRound) return;
-  state.blitzRemaining = BLITZ_SECONDS;
-  els.statTimer.textContent = String(state.blitzRemaining);
-  state.blitzInterval = setInterval(() => {
-    state.blitzRemaining -= 1;
-    els.statTimer.textContent = String(Math.max(0, state.blitzRemaining));
-    if (state.blitzRemaining <= 0) {
-      clearBlitzTimer();
-      blitzTimeUp();
-    }
-  }, 1000);
+  state.blitzDeadline = Date.now() + BLITZ_SECONDS * 1000;
+  updateBlitzCountdown();
+  // Ticks off a wall-clock deadline rather than decrementing a counter, so
+  // it self-corrects for any drift instead of accumulating it - important
+  // because a backgrounded/throttled tab can delay individual ticks by much
+  // more than their nominal interval.
+  state.blitzInterval = setInterval(updateBlitzCountdown, 250);
+}
+
+function updateBlitzCountdown() {
+  if (!state.blitzDeadline) return;
+  const remainingMs = state.blitzDeadline - Date.now();
+  els.statTimer.textContent = String(Math.max(0, Math.ceil(remainingMs / 1000)));
+  if (remainingMs <= 0) {
+    clearBlitzTimer();
+    blitzTimeUp();
+  }
 }
 
 // Time's up mid-round: cut straight to the end screen. Whatever round was
@@ -906,6 +921,13 @@ els.btnShare.addEventListener("click", async () => {
 
 window.addEventListener("resize", () => {
   if (!els.screenGame.hidden && state.renderer) state.renderer.resize();
+});
+
+// A background/throttled tab can delay setInterval ticks well past their
+// nominal 250ms - reconcile the moment the tab is visible again instead of
+// waiting on whatever tick the browser eventually gets around to.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") updateBlitzCountdown();
 });
 
 // ---------- Boot ----------

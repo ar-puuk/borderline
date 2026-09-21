@@ -93,4 +93,37 @@ module.exports = async function blitzTests(browser, baseUrl) {
     console.log("  timeout after one answer caps total at rounds actually played: OK");
     await page.close();
   }
+
+  // --- Stalled/throttled ticks (backgrounded tab) still resolve on visibilitychange ---
+  // Regression test for a reported bug: a backgrounded/throttled tab can
+  // delay every pending setInterval tick well past the deadline, and if
+  // nothing else notices, the game just sits on the game screen forever
+  // even though real time is already up. Simulates that by advancing the
+  // clock's system time (setSystemTime does NOT run any pending timers,
+  // unlike runFor/fastForward) past the deadline with zero ticks having
+  // fired, then firing visibilitychange - the fix should reconcile and end
+  // the game immediately from that alone, not from an interval tick.
+  {
+    const page = await browser.newPage({ viewport: { width: 1100, height: 850 } });
+    await page.clock.install();
+    await page.goto(baseUrl + "/index.html", { waitUntil: "networkidle" });
+    await page.click('[data-mode="states"]');
+    await page.click('[data-timed="on"]');
+    await page.click("#btn-play");
+    await page.waitForSelector("#screen-game:not([hidden])");
+
+    const startTime = await page.evaluate(() => Date.now());
+    await page.clock.setSystemTime(startTime + 61000);
+    // No tick has run yet - the UI should still show the stale pre-jump state.
+    assert(
+      (await page.getAttribute("#screen-end", "hidden")) !== null,
+      "screen shouldn't have advanced yet - no timer tick has executed"
+    );
+
+    await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+    await page.waitForSelector("#screen-end:not([hidden])", { timeout: 5000 });
+    assert((await page.textContent("#end-total")) === "0", "stalled-tick timeout should still end at 0/0");
+    console.log("  stalled ticks past the deadline still resolve via visibilitychange: OK");
+    await page.close();
+  }
 };
