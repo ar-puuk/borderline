@@ -318,7 +318,7 @@ body {
 @media (min-width: 900px) {
   .start-layout {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     gap: 4rem;
   }
