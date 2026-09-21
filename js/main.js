@@ -287,18 +287,10 @@ function endGame() {
   announce(`Round complete. Score ${g.score} out of ${g.total}, ${percent} percent.`);
 }
 
-els.canvas.addEventListener("click", (e) => handleCanvasPoint(e.clientX, e.clientY));
-els.canvas.addEventListener(
-  "touchstart",
-  (e) => {
-    if (e.touches.length === 1) {
-      e.preventDefault();
-      const t = e.touches[0];
-      handleCanvasPoint(t.clientX, t.clientY);
-    }
-  },
-  { passive: false }
-);
+els.canvas.addEventListener("pointerup", (e) => {
+  if (e.pointerType === "mouse" && e.button !== 0) return;
+  handleCanvasPoint(e.clientX, e.clientY);
+});
 
 els.btnNext.addEventListener("click", () => proceed());
 document.addEventListener("keydown", (e) => {
