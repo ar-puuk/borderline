@@ -66,11 +66,42 @@ const state = {
   advanceTimer: null,
 };
 
-function showScreen(name) {
-  for (const s of [els.screenStart, els.screenGame, els.screenEnd]) s.hidden = true;
-  if (name === "start") els.screenStart.hidden = false;
-  if (name === "game") els.screenGame.hidden = false;
-  if (name === "end") els.screenEnd.hidden = false;
+const ALL_SCREENS = () => [els.screenStart, els.screenGame, els.screenEnd];
+const SCREEN_BY_NAME = () => ({ start: els.screenStart, game: els.screenGame, end: els.screenEnd });
+const prefersReducedMotion = () =>
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// `onVisible` runs right after `target.hidden` is cleared (so layout reads
+// like getBoundingClientRect() are correct), which may be after the leaving
+// screen's fade-out animation, not necessarily synchronously.
+function showScreen(name, onVisible) {
+  const target = SCREEN_BY_NAME()[name];
+  const current = ALL_SCREENS().find((s) => !s.hidden);
+
+  // Reset any leftover transition classes from an interrupted switch.
+  for (const s of ALL_SCREENS()) s.classList.remove("screen-leaving", "screen-entering");
+
+  if (!current || current === target || prefersReducedMotion()) {
+    for (const s of ALL_SCREENS()) s.hidden = s !== target;
+    if (onVisible) onVisible();
+    return;
+  }
+
+  current.classList.add("screen-leaving");
+  current.addEventListener(
+    "transitionend",
+    () => {
+      current.classList.remove("screen-leaving");
+      current.hidden = true;
+      target.hidden = false;
+      target.classList.add("screen-entering");
+      if (onVisible) onVisible();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => target.classList.remove("screen-entering"));
+      });
+    },
+    { once: true }
+  );
 }
 
 function announce(text) {
@@ -356,9 +387,10 @@ function startGame() {
     state.renderer.setCountyWorld(outline);
   }
 
-  showScreen("game");
-  state.renderer.resize();
-  nextRound();
+  showScreen("game", () => {
+    state.renderer.resize();
+    nextRound();
+  });
 }
 
 function historyToLayer(h) {
@@ -471,9 +503,6 @@ function endGame() {
   els.endTotal.textContent = String(g.total);
   els.endPercent.textContent = String(percent);
   els.endBarFill.style.width = "0%";
-  requestAnimationFrame(() => {
-    els.endBarFill.style.width = `${percent}%`;
-  });
 
   const best = setBestScore(
     state.mode,
@@ -497,7 +526,11 @@ function endGame() {
     els.endMissedList.innerHTML = "";
   }
 
-  showScreen("end");
+  showScreen("end", () => {
+    requestAnimationFrame(() => {
+      els.endBarFill.style.width = `${percent}%`;
+    });
+  });
   announce(`Round complete. Score ${g.score} out of ${g.total}, ${percent} percent.`);
 }
 

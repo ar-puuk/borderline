@@ -150,10 +150,29 @@ body {
   width: 100%;
   max-width: 960px;
   margin: 0 auto;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 220ms ease, transform 220ms ease;
 }
 
 .screen[hidden] {
   display: none;
+}
+
+.screen.screen-leaving {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.screen.screen-entering {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen {
+    transition: none;
+  }
 }
 
 .screen-start {
