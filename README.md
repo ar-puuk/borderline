@@ -76,8 +76,14 @@ the game keeps working with no network connection afterward. The
 lazily-loaded `counties-10m.json` gets cached the first time you
 actually switch to Counties mode, same as the network behavior it
 piggybacks on. The service worker is cache-first for same-origin GET
-requests and bumps `CACHE_NAME` in `sw.js` to invalidate old caches on
-a future update.
+requests, which means **any edit to a precached file (anything in
+`APP_SHELL` in `sw.js` - notably every `js/*.js` file, `index.html`,
+and `css/styles.css`) is invisible to a returning visitor until
+`CACHE_NAME` in `sw.js` is bumped** - that's the only thing that makes
+the browser refetch and re-cache everything on the next load. Forgot
+once already (a Blitz-mode fix shipped in source but never reached an
+already-visited browser); bump it as part of any commit that touches a
+precached file, not just PWA-specific ones.
 
 ## Running it locally
 
@@ -111,10 +117,12 @@ input, Easy/Hard history persistence (verified by reading actual
 rendered canvas pixels, not just "did it crash"), theme/sound
 persistence, retry-missed, and pan/zoom hit-test correctness, and that
 the service worker registers, activates, and actually serves the app
-shell with the network disabled, that Blitz mode's countdown ends the
-game with the score correctly capped at rounds actually played (using
-a mocked clock, not a real 60-second wait), and that the typed-answer
-field scores hits/misses correctly (including its punctuation/case
+shell with the network disabled, that a stale cache left behind by an
+older `CACHE_NAME` gets cleaned up on activation rather than shadowing
+fresh content, that Blitz mode's countdown ends the game with the
+score correctly capped at rounds actually played (using a mocked
+clock, not a real 60-second wait), and that the typed-answer field
+scores hits/misses correctly (including its punctuation/case
 normalization) entirely without clicking the map.
 
 A handful of counties have genuinely thin or scattered shapes (a few
