@@ -66,7 +66,7 @@ const els = {
   btnShare: document.getElementById("btn-share"),
   btnShareLabel: document.getElementById("btn-share-label"),
   btnCopySetup: document.getElementById("btn-copy-setup"),
-  btnCopySetupLabel: document.getElementById("btn-copy-setup-label"),
+  btnCopySetupUse: document.getElementById("btn-copy-setup-use"),
 };
 
 // Captured once, before any of our own history.replaceState calls (see
@@ -961,11 +961,23 @@ els.btnShare.addEventListener("click", async () => {
 
 els.btnCopySetup.addEventListener("click", async () => {
   const copied = await copyToClipboard(shareUrl());
-  els.btnCopySetupLabel.textContent = copied ? "Copied!" : "Couldn't copy";
+  els.btnCopySetupUse.setAttribute("href", copied ? "#icon-check-circle" : "#icon-x-circle");
+  els.btnCopySetup.setAttribute("aria-label", copied ? "Copied!" : "Couldn't copy");
   setTimeout(() => {
-    els.btnCopySetupLabel.textContent = "Copy link to this setup";
+    els.btnCopySetupUse.setAttribute("href", "#icon-copy");
+    els.btnCopySetup.setAttribute("aria-label", "Copy link to this setup");
   }, 2000);
 });
+
+// CSS `aspect-ratio` doesn't reliably resolve against a flex `stretch`-
+// derived cross size, so the square copy-setup button can't just mirror
+// Play's height in pure CSS - measure it directly instead. Re-runs whenever
+// Play's own box changes (font load, zoom, viewport width) so it can never
+// drift out of sync.
+new ResizeObserver(() => {
+  const h = els.btnPlay.getBoundingClientRect().height;
+  if (h > 0) els.btnCopySetup.style.width = `${h}px`;
+}).observe(els.btnPlay);
 
 window.addEventListener("resize", () => {
   if (!els.screenGame.hidden && state.renderer) state.renderer.resize();

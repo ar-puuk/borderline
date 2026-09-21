@@ -94,6 +94,23 @@ module.exports = async function urlSetupTests(browser, baseUrl) {
     await page.close();
   }
 
+  // --- Copy-setup button is exactly square and matches Play's height ---
+  // Regression test: CSS aspect-ratio doesn't reliably resolve against a
+  // flex `align-items: stretch`-derived cross size, so this is measured via
+  // a ResizeObserver in main.js rather than pure CSS - confirm it actually
+  // lands on an exact match, not just "close."
+  {
+    const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+    await page.goto(`${baseUrl}/index.html`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(100);
+    const playBox = await page.locator("#btn-play").boundingBox();
+    const copyBox = await page.locator("#btn-copy-setup").boundingBox();
+    assert(Math.abs(copyBox.height - playBox.height) < 0.5, "copy-setup button should match Play's height");
+    assert(Math.abs(copyBox.width - copyBox.height) < 0.5, "copy-setup button should be square");
+    console.log("  copy-setup button is square and matches Play's height: OK");
+    await page.close();
+  }
+
   // --- rounds= is omitted from any generated URL while Blitz is selected ---
   // A rounds count paired with timed=1 reads as contradictory (Blitz always
   // plays until the clock or the pool runs out, ignoring round count), so
@@ -124,8 +141,12 @@ module.exports = async function urlSetupTests(browser, baseUrl) {
     await page.click("#btn-copy-setup");
     await page.waitForTimeout(150);
     assert(
-      (await page.textContent("#btn-copy-setup-label")) === "Copied!",
-      "copy-setup button should confirm the copy"
+      (await page.getAttribute("#btn-copy-setup", "aria-label")) === "Copied!",
+      "copy-setup button should confirm the copy via aria-label"
+    );
+    assert(
+      (await page.getAttribute("#btn-copy-setup-use", "href")) === "#icon-check-circle",
+      "copy-setup button should swap to a checkmark icon on success"
     );
     const clipboard = await page.evaluate(() => navigator.clipboard.readText());
     const params = new URLSearchParams(new URL(clipboard).search);
