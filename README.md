@@ -33,14 +33,24 @@ map fills in as a running record of the game. Hard clears that mark the
 moment you move to the next round, so the map goes back to blank between
 guesses (the original, tougher design).
 
-A hit briefly flashes the state green and auto-advances. A miss highlights
-the correct answer, marks where you clicked, and waits for you to click
-**Next** (or press Enter/Space) before continuing. The end screen shows
-your final score, percentage, and everything you missed.
+A hit briefly flashes the state green and auto-advances (with a short
+chime and a light haptic tap on supporting devices). A miss highlights
+the correct answer, marks where you clicked, plays a lower buzz, and
+waits for you to click **Next** (or press Enter/Space) before
+continuing. The end screen shows your final score, percentage, and
+everything you missed — with a **Retry these** button that jumps
+straight into a focused round of just what you got wrong.
 
-The header (present on every screen) has a light/dark theme toggle —
-it follows your OS preference by default and remembers an explicit
-choice in `localStorage` — and a link back to this repo.
+**Zoom and pan** the map to get a closer look at fiddly shapes (tiny
+islands, thin coastal counties): scroll or pinch to zoom in anchored
+under your cursor/fingers, drag to pan once zoomed in, or use the
+on-map +/− /reset controls. The view resets to the default fit at the
+start of every round.
+
+The header (present on every screen) has a light/dark theme toggle and
+a sound mute toggle — both follow sensible defaults (OS theme
+preference; sound on) and remember an explicit choice in
+`localStorage` — plus a link back to this repo.
 
 ## Running it locally
 
@@ -158,6 +168,7 @@ js/
   renderer.js          canvas drawing (DPR-aware, resize-aware)
   storage.js           best-score persistence (localStorage, try/catch-wrapped)
   theme.js             light/dark theme toggle + system-preference sync
+  audio.js             synthesized hit/miss tones (Web Audio) + haptics
 data/                vendored TopoJSON (nationwide Albers + unprojected counties)
 vendor/              vendored, bundled topojson-client + d3-geo (ES modules), fonts
 ```

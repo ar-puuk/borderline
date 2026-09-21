@@ -34,6 +34,9 @@ const els = {
   statStreak: document.getElementById("stat-streak"),
   roundProgressFill: document.getElementById("round-progress-fill"),
   canvas: document.getElementById("map-canvas"),
+  btnZoomIn: document.getElementById("btn-zoom-in"),
+  btnZoomOut: document.getElementById("btn-zoom-out"),
+  btnZoomReset: document.getElementById("btn-zoom-reset"),
   feedbackPanel: document.getElementById("feedback-panel"),
   feedbackText: document.getElementById("feedback-text"),
   btnNext: document.getElementById("btn-next"),
@@ -428,6 +431,8 @@ function nextRound() {
   clearAdvanceTimer();
   els.feedbackPanel.hidden = true;
   state.awaitingConfirmation = false;
+  state.renderer.resetView();
+  updateZoomButtons();
   if (state.difficulty === "hard") {
     state.renderer.setLayers([]);
   } else {
@@ -545,9 +550,135 @@ function endGame() {
   announce(`Round complete. Score ${g.score} out of ${g.total}, ${percent} percent.`);
 }
 
-els.canvas.addEventListener("pointerup", (e) => {
+// ---------- Map zoom / pan ----------
+// A guess is a click/tap with negligible movement; anything past the drag
+// threshold - or a second finger joining (pinch) - is a view gesture instead,
+// and must not register as a guess on release.
+
+const DRAG_THRESHOLD = 4;
+const ZOOM_STEP = 1.6;
+const activePointers = new Map(); // pointerId -> { x, y } in client coords
+let dragAnchor = null; // { x, y, panX, panY } for single-pointer pan
+let pinchAnchor = null; // { dist, zoom } for two-pointer pinch
+let isGesture = false; // true once movement/pinch exceeds the click threshold
+
+function updateZoomButtons() {
+  const zoom = state.renderer ? state.renderer.getZoom() : 1;
+  els.btnZoomOut.disabled = zoom <= 1;
+  els.btnZoomReset.disabled = zoom <= 1;
+}
+
+function pointerDistance() {
+  const pts = Array.from(activePointers.values());
+  return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+}
+
+function pointerMidpoint() {
+  const pts = Array.from(activePointers.values());
+  return { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+}
+
+els.canvas.addEventListener("pointerdown", (e) => {
   if (e.pointerType === "mouse" && e.button !== 0) return;
-  handleCanvasPoint(e.clientX, e.clientY);
+  try {
+    els.canvas.setPointerCapture(e.pointerId);
+  } catch {
+    // Some environments (or pointer types) don't support capture here;
+    // the gesture tracking below works fine without it regardless.
+  }
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (activePointers.size === 1) {
+    isGesture = false;
+    dragAnchor = { x: e.clientX, y: e.clientY, lastX: e.clientX, lastY: e.clientY };
+  } else if (activePointers.size === 2) {
+    isGesture = true; // a second finger joining is always a pinch, never a tap
+    dragAnchor = null;
+    pinchAnchor = { dist: pointerDistance(), zoom: state.renderer.getZoom() };
+  }
+});
+
+els.canvas.addEventListener("pointermove", (e) => {
+  if (!activePointers.has(e.pointerId)) return;
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (activePointers.size >= 2 && pinchAnchor) {
+    const dist = pointerDistance();
+    const mid = pointerMidpoint();
+    const rect = els.canvas.getBoundingClientRect();
+    state.renderer.setZoomAt(
+      mid.x - rect.left,
+      mid.y - rect.top,
+      pinchAnchor.zoom * (dist / pinchAnchor.dist)
+    );
+    updateZoomButtons();
+    return;
+  }
+
+  if (dragAnchor) {
+    const totalDx = e.clientX - dragAnchor.x;
+    const totalDy = e.clientY - dragAnchor.y;
+    if (!isGesture && Math.hypot(totalDx, totalDy) > DRAG_THRESHOLD) isGesture = true;
+    if (isGesture) {
+      state.renderer.panBy(e.clientX - dragAnchor.lastX, e.clientY - dragAnchor.lastY);
+    }
+    dragAnchor.lastX = e.clientX;
+    dragAnchor.lastY = e.clientY;
+  }
+});
+
+function onPointerEnd(e) {
+  activePointers.delete(e.pointerId);
+
+  if (activePointers.size === 0) {
+    const wasGesture = isGesture;
+    dragAnchor = null;
+    pinchAnchor = null;
+    isGesture = false;
+    if (!wasGesture) handleCanvasPoint(e.clientX, e.clientY);
+  } else if (activePointers.size === 1) {
+    // Coming out of a pinch with one finger still down: re-anchor for pan
+    // instead of jumping to a drag delta computed from the old anchor.
+    const [[, p]] = activePointers;
+    dragAnchor = { x: p.x, y: p.y, lastX: p.x, lastY: p.y };
+    pinchAnchor = null;
+  }
+}
+
+els.canvas.addEventListener("pointerup", onPointerEnd);
+els.canvas.addEventListener("pointercancel", onPointerEnd);
+
+els.canvas.addEventListener(
+  "wheel",
+  (e) => {
+    e.preventDefault();
+    const rect = els.canvas.getBoundingClientRect();
+    const factor = Math.exp(-e.deltaY * 0.0025);
+    state.renderer.setZoomAt(e.clientX - rect.left, e.clientY - rect.top, state.renderer.getZoom() * factor);
+    updateZoomButtons();
+  },
+  { passive: false }
+);
+
+els.btnZoomIn.addEventListener("click", () => {
+  state.renderer.setZoomAt(
+    state.renderer.cssWidth / 2,
+    state.renderer.cssHeight / 2,
+    state.renderer.getZoom() * ZOOM_STEP
+  );
+  updateZoomButtons();
+});
+els.btnZoomOut.addEventListener("click", () => {
+  state.renderer.setZoomAt(
+    state.renderer.cssWidth / 2,
+    state.renderer.cssHeight / 2,
+    state.renderer.getZoom() / ZOOM_STEP
+  );
+  updateZoomButtons();
+});
+els.btnZoomReset.addEventListener("click", () => {
+  state.renderer.resetView();
+  updateZoomButtons();
 });
 
 els.btnNext.addEventListener("click", () => proceed());

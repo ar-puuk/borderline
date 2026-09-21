@@ -7,6 +7,8 @@ const COLORS = {
   marker: "#ff7a45",
 };
 
+const MAX_ZOOM = 6;
+
 export class MapRenderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -19,6 +21,15 @@ export class MapRenderer {
     this.baseFeature = null;
     this.layers = []; // { feature, fill?, stroke?, lineWidth? }
     this.marker = null; // { x, y } in whichever space the current mode uses
+    this.cssWidth = 0;
+    this.cssHeight = 0;
+
+    // User-driven zoom/pan, layered on top of the base per-mode fit. In CSS-
+    // pixel space, applied as a uniform scale around the canvas center plus
+    // a pan offset.
+    this.viewZoom = 1;
+    this.viewPanX = 0;
+    this.viewPanY = 0;
   }
 
   /** Nationwide view: pre-projected Albers coordinates, fit via our own
@@ -57,6 +68,7 @@ export class MapRenderer {
     } else if (this.mode === "county" && this.fitFeature) {
       this.projection = fitMercatorProjection(this.fitFeature, w, h, 0.06);
     }
+    this.clampPan();
     this.render();
   }
 
@@ -72,18 +84,70 @@ export class MapRenderer {
     this.marker = point;
   }
 
+  getZoom() {
+    return this.viewZoom;
+  }
+
+  clampPan() {
+    const maxPanX = Math.max(0, ((this.viewZoom - 1) * this.cssWidth) / 2);
+    const maxPanY = Math.max(0, ((this.viewZoom - 1) * this.cssHeight) / 2);
+    this.viewPanX = Math.min(maxPanX, Math.max(-maxPanX, this.viewPanX));
+    this.viewPanY = Math.min(maxPanY, Math.max(-maxPanY, this.viewPanY));
+  }
+
+  /** Zoom to `targetZoom`, keeping the map point currently under
+   * (screenX, screenY) - CSS pixels relative to the canvas - anchored in
+   * place. Used for wheel-zoom (cursor-anchored) and pinch-zoom
+   * (midpoint-anchored). */
+  setZoomAt(screenX, screenY, targetZoom) {
+    const zoomOld = this.viewZoom;
+    const zoomNew = Math.min(MAX_ZOOM, Math.max(1, targetZoom));
+    if (zoomNew === zoomOld) return;
+    const cx = this.cssWidth / 2;
+    const cy = this.cssHeight / 2;
+    const preX = (screenX - this.viewPanX - cx) / zoomOld + cx;
+    const preY = (screenY - this.viewPanY - cy) / zoomOld + cy;
+    this.viewZoom = zoomNew;
+    this.viewPanX = screenX - (preX - cx) * zoomNew - cx;
+    this.viewPanY = screenY - (preY - cy) * zoomNew - cy;
+    this.clampPan();
+    this.render();
+  }
+
+  /** Pan by a CSS-pixel delta. No-op at zoom 1 (nothing to pan). */
+  panBy(dx, dy) {
+    if (this.viewZoom <= 1) return;
+    this.viewPanX += dx;
+    this.viewPanY += dy;
+    this.clampPan();
+    this.render();
+  }
+
+  resetView() {
+    this.viewZoom = 1;
+    this.viewPanX = 0;
+    this.viewPanY = 0;
+    this.render();
+  }
+
   /** Convert a client (viewport) point to the coordinate space this
    * renderer is currently drawing/hit-testing in. */
   toMapPoint(clientX, clientY) {
     const rect = this.canvas.getBoundingClientRect();
     const cssX = clientX - rect.left;
     const cssY = clientY - rect.top;
+
+    const cx = this.cssWidth / 2;
+    const cy = this.cssHeight / 2;
+    const preX = (cssX - this.viewPanX - cx) / this.viewZoom + cx;
+    const preY = (cssY - this.viewPanY - cy) / this.viewZoom + cy;
+
     if (this.mode === "county") {
-      return { x: cssX, y: cssY };
+      return { x: preX, y: preY };
     }
     return {
-      x: (cssX - this.transform.tx) / this.transform.k,
-      y: (cssY - this.transform.ty) / this.transform.k,
+      x: (preX - this.transform.tx) / this.transform.k,
+      y: (preY - this.transform.ty) / this.transform.k,
     };
   }
 
@@ -97,14 +161,23 @@ export class MapRenderer {
     const { ctx, canvas, dpr } = this;
     if (!canvas.width || !canvas.height) return;
     // In county mode the fitted Mercator projection already outputs final
-    // CSS-pixel coordinates, so only the DPR scale applies. In nation mode
-    // we additionally apply our own uniform scale/translate on top.
-    const scaleFactor = this.mode === "nation" ? this.transform.k : 1;
+    // CSS-pixel coordinates, so only the DPR scale applies there. In nation
+    // mode we additionally apply our own uniform scale/translate. The view
+    // zoom multiplies on top of either.
+    const scaleFactor = (this.mode === "nation" ? this.transform.k : 1) * this.viewZoom;
 
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const cx = this.cssWidth / 2;
+    const cy = this.cssHeight / 2;
+    ctx.translate(this.viewPanX, this.viewPanY);
+    ctx.translate(cx, cy);
+    ctx.scale(this.viewZoom, this.viewZoom);
+    ctx.translate(-cx, -cy);
+
     if (this.mode === "nation") {
       ctx.translate(this.transform.tx, this.transform.ty);
       ctx.scale(this.transform.k, this.transform.k);

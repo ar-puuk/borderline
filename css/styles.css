@@ -259,6 +259,16 @@ body {
   border-color: var(--border-strong);
 }
 
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.icon-btn:disabled:hover {
+  color: var(--ink-dim);
+  border-color: var(--border);
+}
+
 .icon-btn .icon {
   width: 1.05rem;
   height: 1.05rem;
@@ -775,6 +785,20 @@ body {
   display: block;
   cursor: crosshair;
   touch-action: none;
+}
+
+.zoom-controls {
+  position: absolute;
+  right: 0.85rem;
+  bottom: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.zoom-controls .icon-btn {
+  background: var(--surface);
+  box-shadow: 0 2px 8px -2px var(--scrim-shadow);
 }
 
 .feedback-panel {

@@ -101,6 +101,15 @@
       <path d="M4 9.5v5h3.8L13 19V5L7.8 9.5H4z"/>
       <path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/>
     </symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24">
+      <path d="M12 5v14M5 12h14"/>
+    </symbol>
+    <symbol id="icon-minus" viewBox="0 0 24 24">
+      <path d="M5 12h14"/>
+    </symbol>
+    <symbol id="icon-frame" viewBox="0 0 24 24">
+      <path d="M4 9V4.5h5M20 9V4.5h-5M4 15v4.5h5M20 15v4.5h-5"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -263,6 +272,17 @@
 
     <div class="map-wrap">
       <canvas id="map-canvas" role="img" aria-label="Map"></canvas>
+      <div class="zoom-controls">
+        <button type="button" id="btn-zoom-in" class="icon-btn" aria-label="Zoom in">
+          <svg class="icon"><use href="#icon-plus"></use></svg>
+        </button>
+        <button type="button" id="btn-zoom-out" class="icon-btn" aria-label="Zoom out" disabled>
+          <svg class="icon"><use href="#icon-minus"></use></svg>
+        </button>
+        <button type="button" id="btn-zoom-reset" class="icon-btn" aria-label="Reset zoom" disabled>
+          <svg class="icon"><use href="#icon-frame"></use></svg>
+        </button>
+      </div>
       <div id="feedback-panel" class="feedback-panel" hidden>
         <svg class="icon feedback-icon"><use href="#icon-x-circle"></use></svg>
         <p id="feedback-text" class="feedback-text"></p>
@@ -271,7 +291,7 @@
     </div>
 
     <p id="live-region" class="sr-only" aria-live="polite" role="status"></p>
-    <p class="canvas-alt sr-only">Outline map used for click-based guessing. Screen reader users can play with sighted assistance; each guess result is announced above.</p>
+    <p class="canvas-alt sr-only">Outline map used for click-based guessing. Scroll or pinch to zoom in on tricky shapes, drag to pan while zoomed in. Screen reader users can play with sighted assistance; each guess result is announced above.</p>
   </section>
 
   <!-- END SCREEN -->
