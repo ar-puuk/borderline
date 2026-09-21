@@ -72,14 +72,12 @@ async function fetchJson(url) {
   return res.json();
 }
 
-export async function loadMapData() {
-  const [statesTopo, countiesTopo] = await Promise.all([
-    fetchJson(STATES_URL),
-    fetchJson(COUNTIES_URL),
-  ]);
+/** States mode's data, plus everything Counties mode's start-screen picker
+ * needs (state names) - small (~80KB) and needed immediately on boot. */
+export async function loadStatesData() {
+  const statesTopo = await fetchJson(STATES_URL);
 
   const nationFeature = feature(statesTopo, statesTopo.objects.nation);
-
   const stateGeoms = statesTopo.objects.states.geometries;
   const states = stateGeoms.map((g) => ({
     id: g.id,
@@ -88,6 +86,22 @@ export async function loadMapData() {
     playable: !EXCLUDED_STATE_NAMES.has(g.properties.name),
   }));
   const statesByFips = new Map(states.map((s) => [s.id, s]));
+
+  return {
+    nationFeature,
+    nationBbox: statesTopo.bbox,
+    states,
+    statesByFips,
+    playableStates: states.filter((s) => s.playable),
+  };
+}
+
+/** Counties mode's data (~840KB, unprojected). Deferred until the player
+ * actually picks Counties mode, since a States-only player never needs it -
+ * see js/main.js's ensureCountiesData(). Needs `states` from
+ * loadStatesData() to group/label counties per state. */
+export async function loadCountiesData(states) {
+  const countiesTopo = await fetchJson(COUNTIES_URL);
 
   const countyGeoms = countiesTopo.objects.counties.geometries;
   const countiesByStateFips = new Map();
@@ -129,13 +143,5 @@ export async function loadMapData() {
     stateOutlineByState.set(state.name, merge(countiesTopo, geoms));
   }
 
-  return {
-    nationFeature,
-    nationBbox: statesTopo.bbox,
-    states,
-    statesByFips,
-    playableStates: states.filter((s) => s.playable),
-    countiesByState,
-    stateOutlineByState,
-  };
+  return { countiesByState, stateOutlineByState };
 }

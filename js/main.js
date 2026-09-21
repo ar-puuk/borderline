@@ -1,4 +1,4 @@
-import { loadMapData } from "./mapData.js";
+import { loadStatesData, loadCountiesData } from "./mapData.js";
 import { MapRenderer, COLORS, getMissPattern } from "./renderer.js";
 import { Game } from "./game.js";
 import { getBestScore, setBestScore } from "./storage.js";
@@ -69,6 +69,7 @@ const state = {
   awaitingConfirmation: false,
   advanceTimer: null,
   lastMissedPool: null,
+  countiesLoadPromise: null, // in-flight/settled promise for the deferred counties fetch
 };
 
 const ALL_SCREENS = () => [els.screenStart, els.screenGame, els.screenEnd];
@@ -227,6 +228,7 @@ els.statePickerList.addEventListener("keydown", (e) => {
 function currentPoolLength() {
   if (!state.mapData) return 0;
   if (state.mode === "states") return state.mapData.playableStates.length;
+  if (!state.mapData.countiesByState) return 0; // still loading
   const list = state.mapData.countiesByState.get(state.stateName);
   return list ? list.length : 0;
 }
@@ -252,6 +254,29 @@ function updateRoundsAvailability() {
   updateBestScoreNote();
 }
 
+// County topology is ~840KB and unprojected (see mapData.js) - a States-
+// only player never needs it, so it's fetched lazily on first switching to
+// Counties mode rather than blocking initial load like States data does.
+function ensureCountiesData() {
+  if (!state.mapData || state.mapData.countiesByState) return Promise.resolve();
+  if (state.countiesLoadPromise) return state.countiesLoadPromise;
+
+  els.btnPlay.disabled = true;
+  els.btnPlayLabel.textContent = "Loading counties…";
+  state.countiesLoadPromise = loadCountiesData(state.mapData.states)
+    .then((counties) => {
+      Object.assign(state.mapData, counties);
+      els.btnPlay.disabled = false;
+      els.btnPlayLabel.textContent = "Play";
+      updateRoundsAvailability();
+    })
+    .catch((err) => {
+      els.btnPlayLabel.textContent = "Failed to load county data";
+      console.error(err);
+    });
+  return state.countiesLoadPromise;
+}
+
 function selectMode(mode) {
   state.mode = mode;
   for (const btn of els.modeButtons) {
@@ -264,6 +289,7 @@ function selectMode(mode) {
   for (const btn of els.roundButtons) {
     btn.classList.toggle("is-selected", btn.dataset.rounds === state.roundLabel);
   }
+  if (mode === "counties") ensureCountiesData();
   updateRoundsAvailability();
 }
 
@@ -355,6 +381,7 @@ function buildPool() {
   if (state.mode === "states") {
     return state.mapData.playableStates.map((s) => ({ name: s.name, feature: s.feature }));
   }
+  if (!state.mapData.countiesByState) return []; // still loading; Play stays disabled until ready
   const list = state.mapData.countiesByState.get(state.stateName) || [];
   return list.map((c) => ({ name: c.name, feature: c.feature }));
 }
@@ -708,11 +735,15 @@ async function boot() {
   els.btnPlay.disabled = true;
   els.btnPlayLabel.textContent = "Loading map…";
   try {
-    state.mapData = await loadMapData();
+    state.mapData = await loadStatesData();
     populateStatePicker();
     updateRoundsAvailability();
     els.btnPlay.disabled = false;
     els.btnPlayLabel.textContent = "Play";
+    // Covers the edge case where the player switched to Counties mode
+    // before this finished - selectMode()'s own call had nothing to fetch
+    // yet since state.mapData was still null.
+    if (state.mode === "counties") ensureCountiesData();
   } catch (err) {
     els.btnPlayLabel.textContent = "Failed to load map data";
     console.error(err);

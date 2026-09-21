@@ -65,8 +65,9 @@ module.exports = async function countiesTests(browser, baseUrl) {
   await page.goto(baseUrl + "/index.html", { waitUntil: "networkidle" });
 
   const dedup = await page.evaluate(async () => {
-    const { loadMapData } = await import("./js/mapData.js");
-    const md = await loadMapData();
+    const { loadStatesData, loadCountiesData } = await import("./js/mapData.js");
+    const statesData = await loadStatesData();
+    const md = { ...statesData, ...(await loadCountiesData(statesData.states)) };
     const out = {};
     for (const st of ["Nevada", "Maryland", "Missouri"]) {
       const names = md.countiesByState.get(st).map((c) => c.name);

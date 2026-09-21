@@ -129,6 +129,10 @@ deliberately:
   spherical-aware) and rotates the projection to recenter on the
   state's own longitude before fitting.
 
+`counties-10m.json` is ~840KB, so it's fetched lazily the first time you
+switch to Counties mode (`ensureCountiesData()` in `js/main.js`), not
+on initial load - a States-only player never pays for it.
+
 `topojson-client` (for converting TopoJSON to GeoJSON, and merging county
 geometries into a state outline) and `d3-geo` (for path generation and
 planar bounds) are vendored into `vendor/` as small, dependency-free ES

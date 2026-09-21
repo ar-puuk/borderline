@@ -8,8 +8,10 @@ async function findClickPointFor(page, { mode, stateName, targetName, canvasBox 
   return page.evaluate(
     async ({ mode, stateName, targetName, canvasBox }) => {
       if (!window.__testMapData) {
-        const { loadMapData } = await import("./js/mapData.js");
-        window.__testMapData = await loadMapData();
+        const { loadStatesData, loadCountiesData } = await import("./js/mapData.js");
+        const statesData = await loadStatesData();
+        const countiesData = await loadCountiesData(statesData.states);
+        window.__testMapData = { ...statesData, ...countiesData };
       }
       const { fitTransform, fitMercatorProjection, pointInFeature } = await import(
         "./js/geometry.js"
