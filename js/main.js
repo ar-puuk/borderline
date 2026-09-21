@@ -384,8 +384,11 @@ function buildSetupParams() {
   if (state.mode === "counties" && state.stateName) {
     params.set("state", state.stateName.replace(/\s+/g, "-"));
   }
-  // A "retry" session's roundLabel is a one-off, not a reproducible setup -
-  // share the underlying per-mode round count that led to it instead.
+  // Always included, even while Blitz is active (where it has no effect on
+  // gameplay) - it's the underlying Untimed round count, so switching back
+  // to Untimed later doesn't lose the preference. A "retry" session's
+  // roundLabel is a one-off, not a reproducible setup - share the
+  // underlying per-mode round count that led to it instead.
   const rounds =
     state.roundLabel === "retry"
       ? state.mode === "states"
