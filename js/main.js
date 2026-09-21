@@ -132,9 +132,13 @@ els.statePicker.addEventListener("change", () => {
   updateRoundsAvailability();
 });
 els.btnPlay.addEventListener("click", () => startGame());
-els.btnChangeMode.addEventListener("click", () => showScreen("start"));
+els.btnChangeMode.addEventListener("click", () => {
+  updateBestScoreNote();
+  showScreen("start");
+});
 els.btnQuit.addEventListener("click", () => {
   clearAdvanceTimer();
+  updateBestScoreNote();
   showScreen("start");
 });
 

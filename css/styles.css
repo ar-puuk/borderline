@@ -50,6 +50,10 @@ html, body {
   margin: 0 auto;
 }
 
+.screen[hidden] {
+  display: none;
+}
+
 /* ---------- Start screen ---------- */
 
 .brand {
@@ -264,6 +268,10 @@ html, body {
   align-items: center;
   gap: 1rem;
   max-width: calc(100% - 2rem);
+}
+
+.feedback-panel[hidden] {
+  display: none;
 }
 
 .feedback-text {

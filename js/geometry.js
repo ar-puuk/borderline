@@ -1,4 +1,4 @@
-import { geoPath, geoBounds } from "../vendor/d3-geo.min.js";
+import { geoPath } from "../vendor/d3-geo.min.js";
 
 // Path generator with no projection: the topology coordinates are already
 // projected (Albers USA, with AK/HI insets baked in), so geoPath(null) just
@@ -22,8 +22,11 @@ export function fitTransform(bounds, width, height, padding = 0.05) {
   return { k, tx, ty };
 }
 
+// Planar bounds (measured off the rendered path), not d3.geoBounds — that
+// function assumes spherical lon/lat input, but our topology coordinates are
+// already projected, so geoBounds would misread them.
 export function boundsOf(feature) {
-  return geoBounds(feature);
+  return rawPath.bounds(feature);
 }
 
 /** Draw a GeoJSON feature (or FeatureCollection) onto a 2D context that
