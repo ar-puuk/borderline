@@ -10,6 +10,7 @@ const els = {
   screenEnd: document.getElementById("screen-end"),
 
   modeButtons: Array.from(document.querySelectorAll("[data-mode]")),
+  difficultyButtons: Array.from(document.querySelectorAll("[data-difficulty]")),
   statePickerField: document.getElementById("state-picker-field"),
   statePicker: document.getElementById("state-picker"),
   roundsRow: document.getElementById("rounds-row"),
@@ -41,6 +42,7 @@ const els = {
 const state = {
   mapData: null,
   mode: "states",
+  difficulty: "easy", // "easy" keeps every answered region marked; "hard" clears each one on advance
   stateName: null,
   roundLabel: "25",
   stateRoundLabel: "25",
@@ -127,8 +129,18 @@ function selectRoundLabel(label) {
   updateBestScoreNote();
 }
 
+function selectDifficulty(difficulty) {
+  state.difficulty = difficulty;
+  for (const btn of els.difficultyButtons) {
+    const on = btn.dataset.difficulty === difficulty;
+    btn.classList.toggle("is-selected", on);
+    btn.setAttribute("aria-pressed", String(on));
+  }
+  updateBestScoreNote();
+}
+
 function updateBestScoreNote() {
-  const best = getBestScore(state.mode, state.roundLabel, state.stateName);
+  const best = getBestScore(state.mode, state.roundLabel, state.stateName, state.difficulty);
   els.bestScoreNote.textContent = best
     ? `Best: ${best.score}/${best.total} (${best.percent}%)`
     : "No best score yet for this mode.";
@@ -136,6 +148,9 @@ function updateBestScoreNote() {
 
 els.modeButtons.forEach((btn) =>
   btn.addEventListener("click", () => selectMode(btn.dataset.mode))
+);
+els.difficultyButtons.forEach((btn) =>
+  btn.addEventListener("click", () => selectDifficulty(btn.dataset.difficulty))
 );
 els.roundButtons.forEach((btn) =>
   btn.addEventListener("click", () => selectRoundLabel(btn.dataset.rounds))
@@ -201,21 +216,35 @@ function startGame() {
   nextRound();
 }
 
-function syncHistoryLayers() {
-  const layers = state.game.history.map((h) => ({
+function historyToLayer(h) {
+  return {
     feature: h.feature,
     fill: h.hit ? "rgba(51, 209, 122, 0.25)" : "rgba(232, 84, 74, 0.25)",
     stroke: h.hit ? COLORS.hit : COLORS.miss,
     lineWidth: 2,
-  }));
-  state.renderer.setLayers(layers);
+  };
+}
+
+// Easy mode keeps every answered region marked; Hard mode only ever shows
+// the round currently being revealed, and nothing at the start of a round.
+function showAccumulatedHistory() {
+  state.renderer.setLayers(state.game.history.map(historyToLayer));
+}
+
+function showLatestResultOnly() {
+  const last = state.game.history[state.game.history.length - 1];
+  state.renderer.setLayers(last ? [historyToLayer(last)] : []);
 }
 
 function nextRound() {
   clearAdvanceTimer();
   els.feedbackPanel.hidden = true;
   state.awaitingConfirmation = false;
-  syncHistoryLayers();
+  if (state.difficulty === "hard") {
+    state.renderer.setLayers([]);
+  } else {
+    showAccumulatedHistory();
+  }
   state.renderer.setMarker(null);
 
   const target = state.game.next();
@@ -250,7 +279,11 @@ function handleCanvasPoint(clientX, clientY) {
   const { x, y } = clientPointToMap(els.canvas, state.renderer.transform, clientX, clientY);
   const result = g.guess(x, y);
   updateStats();
-  syncHistoryLayers();
+  if (state.difficulty === "hard") {
+    showLatestResultOnly();
+  } else {
+    showAccumulatedHistory();
+  }
 
   if (result.hit) {
     state.renderer.setMarker(null);
@@ -286,7 +319,14 @@ function endGame() {
   els.endTotal.textContent = String(g.total);
   els.endPercent.textContent = String(percent);
 
-  const best = setBestScore(state.mode, state.roundLabel, state.stateName, g.score, g.total);
+  const best = setBestScore(
+    state.mode,
+    state.roundLabel,
+    state.stateName,
+    state.difficulty,
+    g.score,
+    g.total
+  );
   els.endBest.textContent = best
     ? best.isNewBest
       ? "New best score!"

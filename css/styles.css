@@ -112,6 +112,13 @@ html, body {
   flex-wrap: wrap;
 }
 
+.field-hint {
+  margin: 0.5rem 0 0;
+  color: var(--ink-dim);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .choice-btn {
   flex: 1;
   min-width: 4.5rem;

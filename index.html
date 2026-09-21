@@ -27,6 +27,15 @@
         </div>
       </fieldset>
 
+      <fieldset class="field-group">
+        <legend>Difficulty</legend>
+        <div class="choice-row" role="radiogroup" aria-label="Difficulty">
+          <button type="button" class="choice-btn is-selected" data-difficulty="easy" aria-pressed="true">Easy</button>
+          <button type="button" class="choice-btn" data-difficulty="hard" aria-pressed="false">Hard</button>
+        </div>
+        <p class="field-hint" id="difficulty-hint">Easy keeps every answered state/county marked on the map. Hard clears each answer once you move on.</p>
+      </fieldset>
+
       <fieldset id="state-picker-field" class="field-group" hidden>
         <legend>Pick a state</legend>
         <select id="state-picker" aria-label="State to play counties for"></select>

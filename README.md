@@ -23,8 +23,15 @@ Both modes: states/counties come in a random order with no repeats in a
 single game. Choose 10, 25, or all rounds (county mode clamps the choices
 to however many counties the state actually has — e.g. Delaware only
 offers "All" since it has 3). Score, round progress, and streak are shown
-throughout; your best score per mode/round-count/state is remembered
-locally (`localStorage`) and shown on the start screen and end screen.
+throughout; your best score per mode/round-count/state/difficulty is
+remembered locally (`localStorage`) and shown on the start screen and end
+screen.
+
+**Easy or Hard** — Easy keeps every state/county you've answered marked
+on the map (green fill+outline for correct, red for incorrect), so the
+map fills in as a running record of the game. Hard clears that mark the
+moment you move to the next round, so the map goes back to blank between
+guesses (the original, tougher design).
 
 A hit briefly flashes the state green and auto-advances. A miss highlights
 the correct answer, marks where you clicked, and waits for you to click
