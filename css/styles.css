@@ -800,53 +800,6 @@ body {
   letter-spacing: 0.06em;
 }
 
-.answer-form {
-  width: 100%;
-  margin-bottom: 1rem;
-}
-
-.answer-label {
-  display: block;
-  margin-bottom: 0.4rem;
-  color: var(--ink-faint);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.answer-row {
-  display: flex;
-  gap: 0.6rem;
-}
-
-.answer-row input {
-  flex: 1;
-  min-width: 0;
-  appearance: none;
-  background: var(--surface-2);
-  color: var(--ink);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.6rem 0.85rem;
-  font: inherit;
-  font-size: 0.9rem;
-  transition: border-color 120ms ease;
-}
-
-.answer-row input:hover {
-  border-color: var(--border-strong);
-}
-
-.answer-row input:focus-visible {
-  border-color: var(--accent);
-}
-
-.answer-row .btn-sm {
-  flex: none;
-}
-
 .map-wrap {
   position: relative;
   width: 100%;

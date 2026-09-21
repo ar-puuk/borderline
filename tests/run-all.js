@@ -8,7 +8,6 @@ const suites = [
   ["Interaction (keyboard/touch/theme/sound/retry/share/pan-zoom)", require("./interaction.test.js")],
   ["PWA (service worker + offline)", require("./pwa.test.js")],
   ["Blitz mode", require("./blitz.test.js")],
-  ["Typed-answer input", require("./typed-answer.test.js")],
   ["URL-based setup sharing", require("./url-setup.test.js")],
 ];
 
