@@ -9,6 +9,7 @@ const suites = [
   ["PWA (service worker + offline)", require("./pwa.test.js")],
   ["Blitz mode", require("./blitz.test.js")],
   ["Typed-answer input", require("./typed-answer.test.js")],
+  ["URL-based setup sharing", require("./url-setup.test.js")],
 ];
 
 (async () => {

@@ -68,7 +68,14 @@ const els = {
   btnRetryMissed: document.getElementById("btn-retry-missed"),
   btnShare: document.getElementById("btn-share"),
   btnShareLabel: document.getElementById("btn-share-label"),
+  btnCopySetup: document.getElementById("btn-copy-setup"),
+  btnCopySetupLabel: document.getElementById("btn-copy-setup-label"),
 };
+
+// Captured once, before any of our own history.replaceState calls (see
+// syncUrlToSetup()) could touch the address bar - this is the one true
+// snapshot of whatever setup a shared link asked for.
+const initialUrlParams = new URLSearchParams(window.location.search);
 
 const BLITZ_SECONDS = 60;
 
@@ -362,6 +369,80 @@ function updateBestScoreNote() {
     ? `Best: ${best.score}/${best.total} (${best.percent}%)`
     : "No best score yet for this mode.";
   updateWeakSpots();
+  syncUrlToSetup();
+}
+
+// Builds the querystring for the *current* setup (mode/difficulty/timing,
+// plus state when relevant) - shared by the live address-bar sync below and
+// by the Copy-result/Copy-setup-link buttons, so all three ways of sharing a
+// setup produce the exact same URL shape.
+function buildSetupParams() {
+  const params = new URLSearchParams();
+  params.set("mode", state.mode);
+  params.set("difficulty", state.difficulty);
+  if (state.timed) params.set("timed", "1");
+  if (state.mode === "counties" && state.stateName) {
+    params.set("state", state.stateName.replace(/\s+/g, "-"));
+  }
+  // A "retry" session's roundLabel is a one-off, not a reproducible setup -
+  // share the underlying per-mode round count that led to it instead.
+  const rounds =
+    state.roundLabel === "retry"
+      ? state.mode === "states"
+        ? state.stateRoundLabel
+        : state.countyRoundLabel
+      : state.roundLabel;
+  params.set("rounds", rounds);
+  return params;
+}
+
+// Keeps the address bar reflecting the current start-screen setup, so
+// copying it straight out of the browser at any point - not just via a
+// Copy button - shares this exact mode/state/difficulty/rounds/timing
+// combination. No-ops before mapData loads, so it can't clobber an incoming
+// shared link before applyUrlSetup() has had a chance to read it.
+function syncUrlToSetup() {
+  if (!state.mapData) return;
+  const search = "?" + buildSetupParams().toString();
+  if (window.location.search !== search) {
+    history.replaceState(null, "", window.location.pathname + search);
+  }
+}
+
+// Reads the setup a shared link asked for (captured once in
+// initialUrlParams) and applies it to the start screen. Returns a promise
+// that resolves once it's actually ready to play - immediately for States
+// mode, or once the lazily-loaded county data finishes for Counties mode,
+// since the "rounds" value can't be validated against the pool until then.
+function applyUrlSetup() {
+  const params = initialUrlParams;
+
+  const mode = (params.get("mode") || "").toLowerCase();
+  if (mode === "states" || mode === "counties") selectMode(mode);
+
+  const difficulty = (params.get("difficulty") || "").toLowerCase();
+  if (difficulty === "easy" || difficulty === "hard") selectDifficulty(difficulty);
+
+  const timed = (params.get("timed") || "").toLowerCase();
+  if (timed === "1" || timed === "true") selectTimed("on");
+
+  if (state.mode === "counties") {
+    const stateParam = params.get("state");
+    if (stateParam) {
+      const normalized = stateParam.replace(/-/g, " ").trim().toLowerCase();
+      const match = state.mapData.playableStates.find((s) => s.name.toLowerCase() === normalized);
+      if (match) selectState(match.name);
+    }
+  }
+
+  const applyRounds = () => {
+    const rounds = (params.get("rounds") || "").toLowerCase();
+    if (rounds === "10" || rounds === "25" || rounds === "all") selectRoundLabel(rounds);
+  };
+
+  if (state.mode === "counties") return ensureCountiesData().then(applyRounds);
+  applyRounds();
+  return Promise.resolve();
 }
 
 function updateWeakSpots() {
@@ -873,9 +954,8 @@ els.btnPlayAgain.addEventListener("click", () => startGame());
 els.btnRetryMissed.addEventListener("click", () => retryMissed());
 
 function shareUrl() {
-  const url = new URL(window.location.href);
-  url.hash = "";
-  url.search = "";
+  const url = new URL(window.location.origin + window.location.pathname);
+  url.search = buildSetupParams().toString();
   return url.toString();
 }
 
@@ -919,6 +999,14 @@ els.btnShare.addEventListener("click", async () => {
   }, 2000);
 });
 
+els.btnCopySetup.addEventListener("click", async () => {
+  const copied = await copyToClipboard(shareUrl());
+  els.btnCopySetupLabel.textContent = copied ? "Copied!" : "Couldn't copy";
+  setTimeout(() => {
+    els.btnCopySetupLabel.textContent = "Copy link to this setup";
+  }, 2000);
+});
+
 window.addEventListener("resize", () => {
   if (!els.screenGame.hidden && state.renderer) state.renderer.resize();
 });
@@ -938,6 +1026,7 @@ async function boot() {
   try {
     state.mapData = await loadStatesData();
     populateStatePicker();
+    const setupReady = applyUrlSetup();
     updateRoundsAvailability();
     els.btnPlay.disabled = false;
     els.btnPlayLabel.textContent = "Play";
@@ -945,6 +1034,8 @@ async function boot() {
     // before this finished - selectMode()'s own call had nothing to fetch
     // yet since state.mapData was still null.
     if (state.mode === "counties") ensureCountiesData();
+    await setupReady;
+    if (initialUrlParams.get("play") === "1") startGame();
   } catch (err) {
     els.btnPlayLabel.textContent = "Failed to load map data";
     console.error(err);

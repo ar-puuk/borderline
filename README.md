@@ -66,6 +66,31 @@ a sound mute toggle — both follow sensible defaults (OS theme
 preference; sound on) and remember an explicit choice in
 `localStorage` — plus a link back to this repo.
 
+## Sharing a specific setup
+
+The start screen's setup is always mirrored into the URL's query
+string (mode, difficulty, timing, state, and rounds), so the address
+bar itself is a shareable link to whatever you've currently got
+selected — no need to finish a game first. There's also an explicit
+**Copy link to this setup** button next to Play for convenience, and
+the end screen's **Copy result** button includes the same params so a
+shared result also reproduces the setup that produced it.
+
+Recognized parameters (all optional, and invalid/missing values just
+fall back to the normal defaults):
+
+| Param | Values | Notes |
+|---|---|---|
+| `mode` | `states`, `counties` | |
+| `difficulty` | `easy`, `hard` | |
+| `timed` | `1` | Selects Blitz; omit for the normal round-count picker. |
+| `state` | e.g. `New-York` | Only used in Counties mode; spaces or dashes both work. |
+| `rounds` | `10`, `25`, `all` | Clamped the same way the start screen already clamps it. |
+| `play` | `1` | Jumps straight into the game instead of just pre-filling the start screen. |
+
+For example, `?mode=counties&state=Texas&difficulty=hard&rounds=25&play=1`
+drops you straight into a 25-round Hard round of Texas counties.
+
 ## Installing / offline play
 
 Borderline is an installable PWA: a `manifest.json` and a service worker
