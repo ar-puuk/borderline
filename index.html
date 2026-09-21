@@ -73,6 +73,10 @@
     <symbol id="icon-zap" viewBox="0 0 24 24">
       <path d="M13.2 2 4.5 14h5.8l-1 8 9-12.3h-5.8l1-7.7z"/>
     </symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9.2"/>
+      <path d="M12 6.8V12l3.6 2.1"/>
+    </symbol>
     <symbol id="icon-check-circle" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="9.2"/>
       <path d="M7.8 12.4l2.6 2.6 5.8-6.3"/>
@@ -208,6 +212,20 @@
           <p class="field-hint" id="difficulty-hint">Easy keeps every answered state/county marked on the map. Hard clears each answer once you move on.</p>
         </fieldset>
 
+        <fieldset class="field-group">
+          <legend>Timing</legend>
+          <div class="choice-row" role="radiogroup" aria-label="Timing">
+            <button type="button" class="choice-btn is-selected" data-timed="off" aria-pressed="true">
+              <span>Untimed</span>
+            </button>
+            <button type="button" class="choice-btn" data-timed="on" aria-pressed="false">
+              <svg class="icon"><use href="#icon-clock"></use></svg>
+              <span>Blitz · 60s</span>
+            </button>
+          </div>
+          <p class="field-hint" id="timed-hint">Blitz races the clock instead of a round count — answer as many as you can before time runs out.</p>
+        </fieldset>
+
         <fieldset id="state-picker-field" class="field-group" hidden>
           <legend id="state-picker-legend">Pick a state</legend>
           <div class="select-wrap" id="state-picker-wrap">
@@ -280,7 +298,12 @@
           <span class="hud-num" id="stat-score">0</span>
           <span class="hud-unit">score</span>
         </span>
-        <span class="hud-stat">
+        <span class="hud-stat" id="stat-timer-wrap" hidden>
+          <svg class="icon hud-icon"><use href="#icon-clock"></use></svg>
+          <span class="hud-num" id="stat-timer">60</span>
+          <span class="hud-unit">sec</span>
+        </span>
+        <span class="hud-stat" id="stat-round-wrap">
           <svg class="icon hud-icon"><use href="#icon-flag"></use></svg>
           <span class="hud-num" id="stat-round">0/0</span>
           <span class="hud-unit">round</span>
@@ -293,7 +316,7 @@
       </div>
     </div>
 
-    <div class="progress-bar" aria-hidden="true">
+    <div class="progress-bar" id="round-progress-wrap" aria-hidden="true">
       <div class="progress-bar-fill" id="round-progress-fill"></div>
     </div>
 

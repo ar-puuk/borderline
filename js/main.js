@@ -17,6 +17,8 @@ const els = {
 
   modeButtons: Array.from(document.querySelectorAll("[data-mode]")),
   difficultyButtons: Array.from(document.querySelectorAll("[data-difficulty]")),
+  timedButtons: Array.from(document.querySelectorAll("[data-timed]")),
+  roundsField: document.getElementById("rounds-field"),
   statePickerField: document.getElementById("state-picker-field"),
   statePickerWrap: document.getElementById("state-picker-wrap"),
   statePickerBtn: document.getElementById("state-picker-btn"),
@@ -33,8 +35,12 @@ const els = {
   gameContext: document.getElementById("game-context"),
   promptText: document.getElementById("prompt-text"),
   statScore: document.getElementById("stat-score"),
+  statRoundWrap: document.getElementById("stat-round-wrap"),
   statRound: document.getElementById("stat-round"),
   statStreak: document.getElementById("stat-streak"),
+  statTimerWrap: document.getElementById("stat-timer-wrap"),
+  statTimer: document.getElementById("stat-timer"),
+  roundProgressWrap: document.getElementById("round-progress-wrap"),
   roundProgressFill: document.getElementById("round-progress-fill"),
   canvas: document.getElementById("map-canvas"),
   btnZoomIn: document.getElementById("btn-zoom-in"),
@@ -61,16 +67,22 @@ const els = {
   btnShareLabel: document.getElementById("btn-share-label"),
 };
 
+const BLITZ_SECONDS = 60;
+
 const state = {
   mapData: null,
   mode: "states",
   difficulty: "easy", // "easy" keeps every answered region marked; "hard" clears each one on advance
+  timed: false, // Blitz mode: race a countdown instead of a fixed round count
   stateName: null,
   roundLabel: "25",
   stateRoundLabel: "25",
   countyRoundLabel: "25",
   renderer: null,
   game: null,
+  isBlitzRound: false, // whether the in-progress/just-finished game is timed (retry sessions never are)
+  blitzInterval: null,
+  blitzRemaining: 0,
   awaitingConfirmation: false,
   advanceTimer: null,
   lastMissedPool: null,
@@ -319,8 +331,22 @@ function selectDifficulty(difficulty) {
   updateBestScoreNote();
 }
 
+function selectTimed(timed) {
+  state.timed = timed === "on";
+  for (const btn of els.timedButtons) {
+    const on = btn.dataset.timed === timed;
+    btn.classList.toggle("is-selected", on);
+    btn.setAttribute("aria-pressed", String(on));
+  }
+  // Blitz plays through the whole pool until the clock runs out, so a
+  // fixed round count doesn't apply while it's selected.
+  els.roundsField.hidden = state.timed;
+  updateBestScoreNote();
+}
+
 function updateBestScoreNote() {
-  const best = getBestScore(state.mode, state.roundLabel, state.stateName, state.difficulty);
+  const roundLabel = state.timed ? "blitz" : state.roundLabel;
+  const best = getBestScore(state.mode, roundLabel, state.stateName, state.difficulty);
   els.bestScoreNote.textContent = best
     ? `Best: ${best.score}/${best.total} (${best.percent}%)`
     : "No best score yet for this mode.";
@@ -348,7 +374,8 @@ function contextChipsHtml() {
     state.difficulty === "easy" ? "icon-leaf" : "icon-flame",
     state.difficulty === "easy" ? "Easy" : "Hard"
   );
-  return modeChip + difficultyChip;
+  const timedChip = state.isBlitzRound ? chip("icon-clock", "Blitz") : "";
+  return modeChip + difficultyChip + timedChip;
 }
 
 els.modeButtons.forEach((btn) =>
@@ -356,6 +383,9 @@ els.modeButtons.forEach((btn) =>
 );
 els.difficultyButtons.forEach((btn) =>
   btn.addEventListener("click", () => selectDifficulty(btn.dataset.difficulty))
+);
+els.timedButtons.forEach((btn) =>
+  btn.addEventListener("click", () => selectTimed(btn.dataset.timed))
 );
 els.roundButtons.forEach((btn) =>
   btn.addEventListener("click", () => selectRoundLabel(btn.dataset.rounds))
@@ -367,11 +397,13 @@ els.btnChangeMode.addEventListener("click", () => {
 });
 els.btnQuit.addEventListener("click", () => {
   clearAdvanceTimer();
+  clearBlitzTimer();
   updateBestScoreNote();
   showScreen("start");
 });
 els.brandHomeBtn.addEventListener("click", () => {
   clearAdvanceTimer();
+  clearBlitzTimer();
   updateBestScoreNote();
   showScreen("start");
 });
@@ -408,17 +440,19 @@ function resolveCount(poolLength) {
 function startGame() {
   const pool = buildPool();
   if (pool.length === 0) return;
-  const count = resolveCount(pool.length);
-  launchGame(pool, count, state.roundLabel);
+  const count = state.timed ? pool.length : resolveCount(pool.length);
+  const roundLabel = state.timed ? "blitz" : state.roundLabel;
+  launchGame(pool, count, roundLabel, state.timed);
 }
 
 function retryMissed() {
   const pool = state.lastMissedPool;
   if (!pool || pool.length === 0) return;
-  launchGame(pool, pool.length, "retry");
+  launchGame(pool, pool.length, "retry", false);
 }
 
-function launchGame(pool, count, roundLabel) {
+function launchGame(pool, count, roundLabel, timed) {
+  state.isBlitzRound = timed;
   state.game = new Game({
     mode: state.mode,
     stateName: state.stateName,
@@ -429,6 +463,9 @@ function launchGame(pool, count, roundLabel) {
   state.game.total = count;
 
   els.gameContext.innerHTML = contextChipsHtml();
+  els.statRoundWrap.hidden = timed;
+  els.statTimerWrap.hidden = !timed;
+  els.roundProgressWrap.hidden = timed;
 
   if (!state.renderer) state.renderer = new MapRenderer(els.canvas);
 
@@ -444,8 +481,42 @@ function launchGame(pool, count, roundLabel) {
 
   showScreen("game", () => {
     state.renderer.resize();
+    startBlitzTimer();
     nextRound();
   });
+}
+
+function clearBlitzTimer() {
+  if (state.blitzInterval) {
+    clearInterval(state.blitzInterval);
+    state.blitzInterval = null;
+  }
+}
+
+function startBlitzTimer() {
+  clearBlitzTimer();
+  if (!state.isBlitzRound) return;
+  state.blitzRemaining = BLITZ_SECONDS;
+  els.statTimer.textContent = String(state.blitzRemaining);
+  state.blitzInterval = setInterval(() => {
+    state.blitzRemaining -= 1;
+    els.statTimer.textContent = String(Math.max(0, state.blitzRemaining));
+    if (state.blitzRemaining <= 0) {
+      clearBlitzTimer();
+      blitzTimeUp();
+    }
+  }, 1000);
+}
+
+// Time's up mid-round: cut straight to the end screen. Whatever round was
+// showing but never answered doesn't count - Game.endEarly() caps `total`
+// at however many guesses actually made it into history.
+function blitzTimeUp() {
+  clearAdvanceTimer();
+  state.awaitingConfirmation = false;
+  els.feedbackPanel.hidden = true;
+  state.game.endEarly();
+  endGame();
 }
 
 function historyToLayer(h) {
@@ -559,6 +630,7 @@ function proceed() {
 }
 
 function endGame() {
+  clearBlitzTimer();
   const g = state.game;
   const percent = g.total > 0 ? Math.round((g.score / g.total) * 100) : 0;
   const isRetrySession = g.roundLabel === "retry";

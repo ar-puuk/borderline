@@ -48,6 +48,13 @@ and a **Copy result** button that puts a Wordle-style summary (score,
 a 🟩/🟥 grid of the round in order, and a link back to the game) on
 your clipboard to share.
 
+**Untimed or Blitz** — Untimed is the normal 10/25/All round count. Blitz
+swaps that for a 60-second countdown: you play through the pool in order
+until either you run out of items or the clock hits zero, whichever
+comes first, and your score is out of however many you actually
+answered (not the full pool) — so racing the clock has its own best
+score, separate from the untimed one for the same mode/state/difficulty.
+
 **Zoom and pan** the map to get a closer look at fiddly shapes (tiny
 islands, thin coastal counties): scroll or pinch to zoom in anchored
 under your cursor/fingers, drag to pan once zoomed in, or use the
@@ -104,7 +111,9 @@ input, Easy/Hard history persistence (verified by reading actual
 rendered canvas pixels, not just "did it crash"), theme/sound
 persistence, retry-missed, and pan/zoom hit-test correctness, and that
 the service worker registers, activates, and actually serves the app
-shell with the network disabled.
+shell with the network disabled, and that Blitz mode's countdown ends
+the game with the score correctly capped at rounds actually played
+(using a mocked clock, not a real 60-second wait).
 
 A handful of counties have genuinely thin or scattered shapes (a few
 Virginia coastal counties, some Aleutian islands), so the county

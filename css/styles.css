@@ -775,6 +775,11 @@ body {
   gap: 0.45rem;
 }
 
+.hud-stat[hidden],
+.progress-bar[hidden] {
+  display: none;
+}
+
 .hud-icon {
   color: var(--ink-faint);
   width: 1.05em;

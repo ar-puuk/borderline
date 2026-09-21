@@ -66,4 +66,12 @@ export class Game {
   hasNextRound() {
     return this.index < this.total - 1;
   }
+
+  /** Blitz mode: the clock ran out mid-game. Cap `total` at whatever was
+   * actually answered (history only grows on guess(), so an unanswered
+   * in-progress round is correctly excluded) rather than the full pool
+   * count it was launched with. */
+  endEarly() {
+    this.total = this.history.length;
+  }
 }
