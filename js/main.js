@@ -12,7 +12,6 @@ const els = {
   modeButtons: Array.from(document.querySelectorAll("[data-mode]")),
   statePickerField: document.getElementById("state-picker-field"),
   statePicker: document.getElementById("state-picker"),
-  roundsField: document.getElementById("rounds-field"),
   roundsRow: document.getElementById("rounds-row"),
   roundButtons: Array.from(document.querySelectorAll("[data-rounds]")),
   bestScoreNote: document.getElementById("best-score-note"),
@@ -43,7 +42,8 @@ const state = {
   mapData: null,
   mode: "states",
   stateName: null,
-  roundLabel: "all",
+  roundLabel: "25",
+  stateRoundLabel: "25",
   countyRoundLabel: "25",
   renderer: null,
   game: null,
@@ -81,7 +81,7 @@ function currentPoolLength() {
 }
 
 function updateRoundsAvailability() {
-  if (state.mode === "states") {
+  if (!state.mapData) {
     updateBestScoreNote();
     return;
   }
@@ -109,21 +109,17 @@ function selectMode(mode) {
     btn.setAttribute("aria-pressed", String(on));
   }
   els.statePickerField.hidden = mode !== "counties";
-  els.roundsField.hidden = mode === "states";
-  if (mode === "states") {
-    state.roundLabel = "all";
-  } else {
-    state.roundLabel = state.countyRoundLabel;
-    for (const btn of els.roundButtons) {
-      btn.classList.toggle("is-selected", btn.dataset.rounds === state.roundLabel);
-    }
+  state.roundLabel = mode === "states" ? state.stateRoundLabel : state.countyRoundLabel;
+  for (const btn of els.roundButtons) {
+    btn.classList.toggle("is-selected", btn.dataset.rounds === state.roundLabel);
   }
   updateRoundsAvailability();
 }
 
 function selectRoundLabel(label) {
   state.roundLabel = label;
-  state.countyRoundLabel = label;
+  if (state.mode === "states") state.stateRoundLabel = label;
+  else state.countyRoundLabel = label;
   for (const btn of els.roundButtons) {
     const on = btn.dataset.rounds === label;
     btn.classList.toggle("is-selected", on);
@@ -208,6 +204,7 @@ function startGame() {
 function syncHistoryLayers() {
   const layers = state.game.history.map((h) => ({
     feature: h.feature,
+    fill: h.hit ? "rgba(51, 209, 122, 0.25)" : "rgba(232, 84, 74, 0.25)",
     stroke: h.hit ? COLORS.hit : COLORS.miss,
     lineWidth: 2,
   }));
