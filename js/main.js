@@ -32,7 +32,7 @@ const els = {
   endScore: document.getElementById("end-score"),
   endTotal: document.getElementById("end-total"),
   endPercent: document.getElementById("end-percent"),
-  endRingProgress: document.getElementById("end-ring-progress"),
+  endBarFill: document.getElementById("end-bar-fill"),
   endBest: document.getElementById("end-best"),
   endMissedWrap: document.getElementById("end-missed-wrap"),
   endMissedList: document.getElementById("end-missed-list"),
@@ -314,17 +314,16 @@ function proceed() {
   }
 }
 
-const RING_CIRCUMFERENCE = 2 * Math.PI * 58;
-
 function endGame() {
   const g = state.game;
   const percent = g.total > 0 ? Math.round((g.score / g.total) * 100) : 0;
   els.endScore.textContent = String(g.score);
   els.endTotal.textContent = String(g.total);
   els.endPercent.textContent = String(percent);
-  els.endRingProgress.style.strokeDashoffset = String(
-    RING_CIRCUMFERENCE * (1 - percent / 100)
-  );
+  els.endBarFill.style.width = "0%";
+  requestAnimationFrame(() => {
+    els.endBarFill.style.width = `${percent}%`;
+  });
 
   const best = setBestScore(
     state.mode,

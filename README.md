@@ -79,9 +79,11 @@ module bundles (built once with esbuild from the published npm packages —
 no CDN, no bundler needed to run the site itself). License files for both
 are included alongside them.
 
-The display typeface is [Space Grotesk](https://github.com/floriankarsten/space-grotesk)
-(SIL Open Font License), self-hosted as a single variable-weight `.woff2`
-in `vendor/fonts/` — no Google Fonts CDN request at runtime.
+Typefaces are [Space Grotesk](https://github.com/floriankarsten/space-grotesk)
+(display type, variable-weight) and [Space Mono](https://github.com/googlefonts/spacemono)
+(numeric readouts — scores, stats, coordinates), both SIL Open Font
+License, self-hosted as `.woff2` in `vendor/fonts/` — no Google Fonts
+CDN request at runtime.
 
 ### Notes on county naming
 

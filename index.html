@@ -78,12 +78,11 @@
 
   <!-- START SCREEN -->
   <section id="screen-start" class="screen screen-start" aria-labelledby="title">
-    <div class="hero-glow" aria-hidden="true"></div>
-
     <header class="brand">
-      <div class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#icon-pin"></use></svg></div>
+      <p class="brand-eyebrow">US Geography &middot; No. 01</p>
       <h1 id="title">Borderline</h1>
       <p class="tagline">borderline playable<span class="tagline-wink" aria-hidden="true">, if you squint</span></p>
+      <p class="brand-coords" aria-hidden="true">39.8283&deg; N&nbsp;&nbsp;98.5795&deg; W</p>
     </header>
 
     <div class="panel">
@@ -193,15 +192,16 @@
   <section id="screen-end" class="screen" hidden aria-labelledby="end-title">
     <p class="end-eyebrow" id="end-title">Round complete</p>
 
-    <div class="end-ring">
-      <svg class="ring-svg" viewBox="0 0 132 132" aria-hidden="true">
-        <circle class="ring-track" cx="66" cy="66" r="58"/>
-        <circle class="ring-progress" id="end-ring-progress" cx="66" cy="66" r="58"/>
-      </svg>
-      <div class="ring-center">
-        <span class="end-percent-big"><span id="end-percent">0</span><span class="end-percent-sign">%</span></span>
-        <span class="end-score-small"><span id="end-score">0</span> / <span id="end-total">0</span></span>
-      </div>
+    <div class="end-readout">
+      <span class="end-percent-big"><span id="end-percent">0</span><span class="end-percent-sign">%</span></span>
+      <span class="end-score-small"><span id="end-score">0</span> / <span id="end-total">0</span></span>
+    </div>
+
+    <div class="end-bar" aria-hidden="true">
+      <div class="end-bar-fill" id="end-bar-fill"></div>
+      <span class="end-bar-tick" style="left:25%"></span>
+      <span class="end-bar-tick" style="left:50%"></span>
+      <span class="end-bar-tick" style="left:75%"></span>
     </div>
 
     <p id="end-best" class="end-best"></p>
