@@ -42,6 +42,9 @@ const els = {
   statTimer: document.getElementById("stat-timer"),
   roundProgressWrap: document.getElementById("round-progress-wrap"),
   roundProgressFill: document.getElementById("round-progress-fill"),
+  answerForm: document.getElementById("answer-form"),
+  answerInput: document.getElementById("answer-input"),
+  answerOptions: document.getElementById("answer-options"),
   canvas: document.getElementById("map-canvas"),
   btnZoomIn: document.getElementById("btn-zoom-in"),
   btnZoomOut: document.getElementById("btn-zoom-out"),
@@ -85,6 +88,7 @@ const state = {
   blitzRemaining: 0,
   awaitingConfirmation: false,
   advanceTimer: null,
+  usingTypedInput: false, // whichever input method was used last becomes the one auto-focused each round
   lastMissedPool: null,
   countiesLoadPromise: null, // in-flight/settled promise for the deferred counties fetch
 };
@@ -466,6 +470,11 @@ function launchGame(pool, count, roundLabel, timed) {
   els.statRoundWrap.hidden = timed;
   els.statTimerWrap.hidden = !timed;
   els.roundProgressWrap.hidden = timed;
+  els.answerOptions.innerHTML = pool
+    .map((p) => p.name)
+    .sort((a, b) => a.localeCompare(b))
+    .map((n) => `<option value="${n}"></option>`)
+    .join("");
 
   if (!state.renderer) state.renderer = new MapRenderer(els.canvas);
 
@@ -565,6 +574,8 @@ function nextRound() {
   updateStats();
   state.renderer.render();
   announce(`Find ${target.name}.`);
+  els.answerInput.value = "";
+  if (state.usingTypedInput) els.answerInput.focus();
 }
 
 function updateStats() {
@@ -582,12 +593,8 @@ function clearAdvanceTimer() {
   }
 }
 
-function handleCanvasPoint(clientX, clientY) {
+function submitGuess(hit, point) {
   const g = state.game;
-  if (!g || g.awaitingNext) return;
-
-  const point = state.renderer.toMapPoint(clientX, clientY);
-  const hit = state.renderer.pointInFeature(g.current.feature, point);
   const result = g.guess(hit, point);
   recordAttempt(state.mode, state.stateName, result.target.name, hit);
   updateStats();
@@ -617,6 +624,44 @@ function handleCanvasPoint(clientX, clientY) {
     state.advanceTimer = setTimeout(() => proceed(), 1600);
   }
 }
+
+function handleCanvasPoint(clientX, clientY) {
+  const g = state.game;
+  if (!g || g.awaitingNext) return;
+  state.usingTypedInput = false;
+
+  const point = state.renderer.toMapPoint(clientX, clientY);
+  const hit = state.renderer.pointInFeature(g.current.feature, point);
+  submitGuess(hit, point);
+}
+
+// Normalizes away punctuation/case/whitespace differences ("st. louis city"
+// vs "St. Louis City") without doing any fuzzy/approximate matching - the
+// full name (incl. County/Parish/Borough) still has to be typed correctly.
+function normalizeAnswer(s) {
+  return s
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function handleTypedAnswer() {
+  const g = state.game;
+  if (!g || g.awaitingNext) return;
+  const typed = els.answerInput.value;
+  if (!typed.trim()) return;
+  state.usingTypedInput = true;
+
+  const hit = normalizeAnswer(typed) === normalizeAnswer(g.current.name);
+  submitGuess(hit, null);
+}
+
+els.answerForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  handleTypedAnswer();
+});
 
 function proceed() {
   clearAdvanceTimer();

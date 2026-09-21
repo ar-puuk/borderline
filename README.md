@@ -111,9 +111,11 @@ input, Easy/Hard history persistence (verified by reading actual
 rendered canvas pixels, not just "did it crash"), theme/sound
 persistence, retry-missed, and pan/zoom hit-test correctness, and that
 the service worker registers, activates, and actually serves the app
-shell with the network disabled, and that Blitz mode's countdown ends
-the game with the score correctly capped at rounds actually played
-(using a mocked clock, not a real 60-second wait).
+shell with the network disabled, that Blitz mode's countdown ends the
+game with the score correctly capped at rounds actually played (using
+a mocked clock, not a real 60-second wait), and that the typed-answer
+field scores hits/misses correctly (including its punctuation/case
+normalization) entirely without clicking the map.
 
 A handful of counties have genuinely thin or scattered shapes (a few
 Virginia coastal counties, some Aleutian islands), so the county
@@ -240,6 +242,16 @@ package.json         exists only to declare the Playwright dev dependency
 ```
 
 ## Accessibility
+
+Every round can be played two ways: click the outline map, or type the
+name into the "Or type your answer" field and press Enter (a native
+`<input list>` with autocomplete suggestions drawn from every valid
+name for the current mode/state - not the current answer). The typed
+path needs no mouse, no sight of the canvas, and no sighted assistance;
+whichever method you used most recently is the one auto-focused at the
+start of the next round. Matching ignores case, punctuation, and extra
+whitespace, but still expects the full correct name (including
+County/Parish/Borough).
 
 The canvas has `role="img"` with a live-updating `aria-label` naming the
 current prompt, plus a visually-hidden explanatory paragraph and an

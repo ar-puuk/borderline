@@ -320,6 +320,24 @@
       <div class="progress-bar-fill" id="round-progress-fill"></div>
     </div>
 
+    <form id="answer-form" class="answer-form" autocomplete="off">
+      <label for="answer-input" class="answer-label">Or type your answer</label>
+      <div class="answer-row">
+        <input
+          type="text"
+          id="answer-input"
+          name="answer"
+          list="answer-options"
+          autocomplete="off"
+          spellcheck="false"
+          aria-describedby="answer-hint"
+        >
+        <datalist id="answer-options"></datalist>
+        <button type="submit" id="btn-answer-submit" class="btn-ghost btn-sm">Submit</button>
+      </div>
+      <p id="answer-hint" class="sr-only">Type the name and press Enter, or pick from the suggestions. Works fully without clicking the map.</p>
+    </form>
+
     <div class="map-wrap">
       <canvas id="map-canvas" role="img" aria-label="Map"></canvas>
       <div class="zoom-controls">
@@ -341,7 +359,7 @@
     </div>
 
     <p id="live-region" class="sr-only" aria-live="polite" role="status"></p>
-    <p class="canvas-alt sr-only">Outline map used for click-based guessing. Scroll or pinch to zoom in on tricky shapes, drag to pan while zoomed in. Screen reader users can play with sighted assistance; each guess result is announced above.</p>
+    <p class="canvas-alt sr-only">Outline map for click-based guessing. Scroll or pinch to zoom in on tricky shapes, drag to pan while zoomed in. Not using a mouse? Use the "Or type your answer" field above instead - it needs no clicking or sight, and each result is announced.</p>
   </section>
 
   <!-- END SCREEN -->
