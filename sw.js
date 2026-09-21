@@ -1,4 +1,4 @@
-const CACHE_NAME = "borderline-v5";
+const CACHE_NAME = "borderline-v6";
 
 const APP_SHELL = [
   "./",
@@ -25,7 +25,14 @@ const APP_SHELL = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_NAME)
+      // {cache: "reload"} bypasses the browser's own HTTP cache for this
+      // fetch, so the app shell is always primed from the network on
+      // install rather than risking a stale intermediate copy of one file
+      // getting cached alongside fresh copies of the rest.
+      .then((cache) => cache.addAll(APP_SHELL.map((url) => new Request(url, { cache: "reload" }))))
+      .then(() => self.skipWaiting())
   );
 });
 
