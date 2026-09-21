@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Borderline — a geography guessing game</title>
+<meta name="description" content="Borderline: click the map to guess US states and counties. Borderline playable.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- START SCREEN -->
+  <section id="screen-start" class="screen" aria-labelledby="title">
+    <header class="brand">
+      <h1 id="title">Borderline</h1>
+      <p class="tagline">borderline playable<span class="tagline-wink" aria-hidden="true">, if you squint</span></p>
+    </header>
+
+    <div class="panel">
+      <fieldset class="field-group">
+        <legend>Mode</legend>
+        <div class="choice-row" role="radiogroup" aria-label="Game mode">
+          <button type="button" class="choice-btn is-selected" data-mode="states" aria-pressed="true">States</button>
+          <button type="button" class="choice-btn" data-mode="counties" aria-pressed="false">Counties</button>
+        </div>
+      </fieldset>
+
+      <fieldset id="state-picker-field" class="field-group" hidden>
+        <legend>Pick a state</legend>
+        <select id="state-picker" aria-label="State to play counties for"></select>
+      </fieldset>
+
+      <fieldset class="field-group">
+        <legend id="rounds-legend">Rounds</legend>
+        <div class="choice-row" role="radiogroup" aria-labelledby="rounds-legend" id="rounds-row">
+          <button type="button" class="choice-btn" data-rounds="10">10</button>
+          <button type="button" class="choice-btn is-selected" data-rounds="25">25</button>
+          <button type="button" class="choice-btn" data-rounds="all">All</button>
+        </div>
+      </fieldset>
+
+      <p id="best-score-note" class="best-score-note" aria-live="polite"></p>
+
+      <button type="button" id="btn-play" class="btn-primary">Play</button>
+    </div>
+
+    <p class="footnote">Map data: US Census Bureau via <a href="https://github.com/topojson/us-atlas" target="_blank" rel="noopener">us-atlas</a>.</p>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="screen-game" class="screen" hidden aria-labelledby="prompt-text">
+    <div class="hud">
+      <div class="hud-left">
+        <span class="hud-label">Find:</span>
+        <span id="prompt-text" class="hud-prompt">—</span>
+      </div>
+      <div class="hud-right">
+        <span class="hud-stat"><span class="hud-num" id="stat-score">0</span><span class="hud-unit">score</span></span>
+        <span class="hud-stat"><span class="hud-num" id="stat-round">0/0</span><span class="hud-unit">round</span></span>
+        <span class="hud-stat"><span class="hud-num" id="stat-streak">0</span><span class="hud-unit">streak</span></span>
+      </div>
+    </div>
+
+    <div class="map-wrap">
+      <canvas id="map-canvas" role="img" aria-label="Map"></canvas>
+      <div id="feedback-panel" class="feedback-panel" hidden>
+        <p id="feedback-text" class="feedback-text"></p>
+        <button type="button" id="btn-next" class="btn-primary">Next</button>
+      </div>
+    </div>
+
+    <p id="live-region" class="sr-only" aria-live="polite" role="status"></p>
+    <p class="canvas-alt sr-only">Outline map used for click-based guessing. Screen reader users can play with sighted assistance; each guess result is announced above.</p>
+
+    <div class="game-footer">
+      <button type="button" id="btn-quit" class="btn-ghost">Quit to menu</button>
+    </div>
+  </section>
+
+  <!-- END SCREEN -->
+  <section id="screen-end" class="screen" hidden aria-labelledby="end-title">
+    <h2 id="end-title">Round complete</h2>
+    <p class="end-score"><span id="end-score">0</span> / <span id="end-total">0</span> <span class="end-percent">(<span id="end-percent">0</span>%)</span></p>
+    <p id="end-best" class="end-best"></p>
+
+    <div id="end-missed-wrap" class="end-missed-wrap" hidden>
+      <h3>Missed</h3>
+      <ul id="end-missed-list" class="end-missed-list"></ul>
+    </div>
+
+    <div class="end-actions">
+      <button type="button" id="btn-play-again" class="btn-primary">Play again</button>
+      <button type="button" id="btn-change-mode" class="btn-ghost">Change mode</button>
+    </div>
+  </section>
+
+</div>
+
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>
