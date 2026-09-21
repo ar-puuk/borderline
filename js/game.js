@@ -1,5 +1,3 @@
-import { pointInFeature } from "./geometry.js";
-
 function shuffled(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -45,9 +43,12 @@ export class Game {
     return this.current;
   }
 
-  guess(mapX, mapY) {
+  /** Record a guess. `hit` is a caller-supplied boolean (the point-in-polygon
+   * test lives in geometry.js/renderer.js, since it depends on whichever
+   * projection is active for the current mode); `guessPoint` is only used
+   * for placing the miss marker. */
+  guess(hit, guessPoint) {
     const target = this.current;
-    const hit = pointInFeature(target.feature, mapX, mapY);
     if (hit) {
       this.score += 1;
       this.streak += 1;
@@ -57,7 +58,7 @@ export class Game {
       this.missed.push(target.name);
     }
     this.awaitingNext = true;
-    this.lastResult = { hit, target, guessPoint: { x: mapX, y: mapY } };
+    this.lastResult = { hit, target, guessPoint };
     this.history.push({ feature: target.feature, name: target.name, hit });
     return this.lastResult;
   }

@@ -1,7 +1,12 @@
 import { feature, merge } from "../vendor/topojson-client.min.js";
 
 const STATES_URL = "./data/states-albers-10m.json";
-const COUNTIES_URL = "./data/counties-albers-10m.json";
+// Counties use the *unprojected* topology (not Albers) because each state is
+// reprojected on its own with a locally-fitted Web Mercator projection - see
+// geometry.js/fitMercatorProjection. Reusing the nationwide Albers Conic
+// coordinates for a single zoomed-in state shows a visible tilt (meridian
+// convergence), most noticeable on rectangular states like Utah or Wyoming.
+const COUNTIES_URL = "./data/counties-10m.json";
 
 const EXCLUDED_STATE_NAMES = new Set(["District of Columbia", "Puerto Rico"]);
 

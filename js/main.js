@@ -1,7 +1,6 @@
 import { loadMapData } from "./mapData.js";
 import { MapRenderer, COLORS } from "./renderer.js";
 import { Game } from "./game.js";
-import { clientPointToMap, boundsOf } from "./geometry.js";
 import { getBestScore, setBestScore } from "./storage.js";
 
 const els = {
@@ -206,11 +205,11 @@ function startGame() {
   if (state.mode === "states") {
     const [x0, y0, x1, y1] = state.mapData.nationBbox;
     state.renderer.setBase(state.mapData.nationFeature);
-    state.renderer.setWorld([[x0, y0], [x1, y1]]);
+    state.renderer.setNationWorld([[x0, y0], [x1, y1]]);
   } else {
     const outline = state.mapData.stateOutlineByState.get(state.stateName);
     state.renderer.setBase(outline);
-    state.renderer.setWorld(boundsOf(outline));
+    state.renderer.setCountyWorld(outline);
   }
 
   showScreen("game");
@@ -278,8 +277,9 @@ function handleCanvasPoint(clientX, clientY) {
   const g = state.game;
   if (!g || g.awaitingNext) return;
 
-  const { x, y } = clientPointToMap(els.canvas, state.renderer.transform, clientX, clientY);
-  const result = g.guess(x, y);
+  const point = state.renderer.toMapPoint(clientX, clientY);
+  const hit = state.renderer.pointInFeature(g.current.feature, point);
+  const result = g.guess(hit, point);
   updateStats();
   if (state.difficulty === "hard") {
     showLatestResultOnly();
@@ -293,7 +293,7 @@ function handleCanvasPoint(clientX, clientY) {
     announce(`Correct — that's ${result.target.name}. Streak ${g.streak}.`);
     state.advanceTimer = setTimeout(() => proceed(), 650);
   } else {
-    state.renderer.setMarker({ x, y });
+    state.renderer.setMarker(point);
     state.renderer.render();
     announce(`Not quite. That was ${result.target.name}.`);
     els.feedbackText.textContent = `That was ${result.target.name}.`;
