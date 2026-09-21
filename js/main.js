@@ -1,5 +1,5 @@
 import { loadMapData } from "./mapData.js";
-import { MapRenderer, COLORS } from "./renderer.js";
+import { MapRenderer, COLORS, getMissPattern } from "./renderer.js";
 import { Game } from "./game.js";
 import { getBestScore, setBestScore } from "./storage.js";
 import { initTheme } from "./theme.js";
@@ -408,9 +408,13 @@ function launchGame(pool, count, roundLabel) {
 }
 
 function historyToLayer(h) {
+  // Misses get a diagonal-hatch pattern instead of a solid fill, so hit vs.
+  // miss is distinguishable by texture, not just red vs. green - which
+  // red-green colorblind players (the most common form) can't reliably tell
+  // apart otherwise, especially once several of each accumulate on one map.
   return {
     feature: h.feature,
-    fill: h.hit ? "rgba(47, 206, 119, 0.25)" : "rgba(240, 80, 63, 0.25)",
+    fill: h.hit ? "rgba(47, 206, 119, 0.25)" : getMissPattern(),
     stroke: h.hit ? COLORS.hit : COLORS.miss,
     lineWidth: 2,
   };

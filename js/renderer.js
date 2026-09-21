@@ -9,6 +9,37 @@ const COLORS = {
 
 const MAX_ZOOM = 6;
 
+let missPatternCache = null;
+
+/** A diagonal-hatch fill pattern, so a miss is distinguishable from a hit
+ * by texture as well as color - relying on red vs. green alone isn't safe
+ * for red-green colorblind players (the most common form). Cached: a
+ * CanvasPattern isn't tied to the context that created it, so one instance
+ * works as the fillStyle on any canvas. */
+function getMissPattern() {
+  if (missPatternCache) return missPatternCache;
+  const size = 10;
+  const tile = document.createElement("canvas");
+  tile.width = size;
+  tile.height = size;
+  const tctx = tile.getContext("2d");
+  tctx.strokeStyle = COLORS.miss;
+  tctx.lineWidth = 1.6;
+  // Three parallel "\" segments (main tile diagonal plus its two neighbors,
+  // offset by half a tile) so the hatch lines connect seamlessly across
+  // tile edges when repeated, instead of looking like broken dashes.
+  tctx.beginPath();
+  tctx.moveTo(0, size);
+  tctx.lineTo(size, 0);
+  tctx.moveTo(-size / 2, size / 2);
+  tctx.lineTo(size / 2, -size / 2);
+  tctx.moveTo(size / 2, size * 1.5);
+  tctx.lineTo(size * 1.5, size / 2);
+  tctx.stroke();
+  missPatternCache = tctx.createPattern(tile, "repeat");
+  return missPatternCache;
+}
+
 export class MapRenderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -217,4 +248,4 @@ export class MapRenderer {
   }
 }
 
-export { COLORS };
+export { COLORS, getMissPattern };
