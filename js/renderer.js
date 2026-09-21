@@ -1,10 +1,10 @@
 import { drawFeature, fitTransform } from "./geometry.js";
 
 const COLORS = {
-  outline: "#3a3a40",
-  hit: "#33d17a",
-  miss: "#e8544a",
-  marker: "#f2b705",
+  outline: "#3d434f",
+  hit: "#2fce77",
+  miss: "#f0503f",
+  marker: "#ff7a45",
 };
 
 export class MapRenderer {

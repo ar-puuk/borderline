@@ -17,6 +17,7 @@ const els = {
   roundButtons: Array.from(document.querySelectorAll("[data-rounds]")),
   bestScoreNote: document.getElementById("best-score-note"),
   btnPlay: document.getElementById("btn-play"),
+  btnPlayLabel: document.getElementById("btn-play-label"),
 
   promptText: document.getElementById("prompt-text"),
   statScore: document.getElementById("stat-score"),
@@ -32,6 +33,7 @@ const els = {
   endScore: document.getElementById("end-score"),
   endTotal: document.getElementById("end-total"),
   endPercent: document.getElementById("end-percent"),
+  endRingProgress: document.getElementById("end-ring-progress"),
   endBest: document.getElementById("end-best"),
   endMissedWrap: document.getElementById("end-missed-wrap"),
   endMissedList: document.getElementById("end-missed-list"),
@@ -219,7 +221,7 @@ function startGame() {
 function historyToLayer(h) {
   return {
     feature: h.feature,
-    fill: h.hit ? "rgba(51, 209, 122, 0.25)" : "rgba(232, 84, 74, 0.25)",
+    fill: h.hit ? "rgba(47, 206, 119, 0.25)" : "rgba(240, 80, 63, 0.25)",
     stroke: h.hit ? COLORS.hit : COLORS.miss,
     lineWidth: 2,
   };
@@ -312,12 +314,17 @@ function proceed() {
   }
 }
 
+const RING_CIRCUMFERENCE = 2 * Math.PI * 58;
+
 function endGame() {
   const g = state.game;
   const percent = g.total > 0 ? Math.round((g.score / g.total) * 100) : 0;
   els.endScore.textContent = String(g.score);
   els.endTotal.textContent = String(g.total);
   els.endPercent.textContent = String(percent);
+  els.endRingProgress.style.strokeDashoffset = String(
+    RING_CIRCUMFERENCE * (1 - percent / 100)
+  );
 
   const best = setBestScore(
     state.mode,
@@ -369,15 +376,15 @@ window.addEventListener("resize", () => {
 
 async function boot() {
   els.btnPlay.disabled = true;
-  els.btnPlay.textContent = "Loading map…";
+  els.btnPlayLabel.textContent = "Loading map…";
   try {
     state.mapData = await loadMapData();
     populateStatePicker();
     updateRoundsAvailability();
     els.btnPlay.disabled = false;
-    els.btnPlay.textContent = "Play";
+    els.btnPlayLabel.textContent = "Play";
   } catch (err) {
-    els.btnPlay.textContent = "Failed to load map data";
+    els.btnPlayLabel.textContent = "Failed to load map data";
     console.error(err);
   }
 }

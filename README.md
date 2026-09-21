@@ -79,6 +79,10 @@ module bundles (built once with esbuild from the published npm packages —
 no CDN, no bundler needed to run the site itself). License files for both
 are included alongside them.
 
+The display typeface is [Space Grotesk](https://github.com/floriankarsten/space-grotesk)
+(SIL Open Font License), self-hosted as a single variable-weight `.woff2`
+in `vendor/fonts/` — no Google Fonts CDN request at runtime.
+
 ### Notes on county naming
 
 The `name` property in the county data has no suffix, so the game adds

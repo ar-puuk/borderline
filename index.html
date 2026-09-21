@@ -9,11 +9,79 @@
 <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
+
+<svg class="icon-defs" aria-hidden="true">
+  <defs>
+    <symbol id="icon-pin" viewBox="0 0 24 24">
+      <path d="M12 21.5s-7.2-6.4-7.2-11.5a7.2 7.2 0 1 1 14.4 0c0 5.1-7.2 11.5-7.2 11.5z"/>
+      <circle cx="12" cy="10" r="2.6"/>
+    </symbol>
+    <symbol id="icon-grid" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7.5" height="7.5" rx="1.4"/>
+      <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.4"/>
+      <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.4"/>
+      <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.4"/>
+    </symbol>
+    <symbol id="icon-leaf" viewBox="0 0 24 24">
+      <path d="M5 21c0-8.5 4.2-16 15-16 0 10.6-8.5 14.9-15 16z"/>
+      <path d="M5.5 20.5C7.7 15.8 11 12.3 15.5 10"/>
+    </symbol>
+    <symbol id="icon-flame" viewBox="0 0 24 24">
+      <path d="M12 22.5c4.4 0 7.5-2.9 7.5-7.4 0-3.2-1.7-5.4-3.2-7.5.3 2.2-1 3.3-2 3.3.8-3.3-1.1-6.5-4.1-8.7.5 3.2-1.2 5.4-3.1 7.5-1.4 1.5-2.1 3.2-2.1 5.4 0 4.5 3.1 7.4 6.9 7.4z"/>
+    </symbol>
+    <symbol id="icon-trophy" viewBox="0 0 24 24">
+      <path d="M8 4.5h8v4a4 4 0 0 1-8 0v-4z"/>
+      <path d="M8 5.5H5.2A3.3 3.3 0 0 0 8 8.6"/>
+      <path d="M16 5.5h2.8A3.3 3.3 0 0 1 16 8.6"/>
+      <path d="M10.2 15h3.6v2h-3.6z"/>
+      <path d="M8 21h8"/>
+      <path d="M12 17v4"/>
+    </symbol>
+    <symbol id="icon-flag" viewBox="0 0 24 24">
+      <path d="M5.5 21.5V3.8"/>
+      <path d="M5.5 4.3h13l-3.2 4.2 3.2 4.2h-13"/>
+    </symbol>
+    <symbol id="icon-zap" viewBox="0 0 24 24">
+      <path d="M13.2 2 4.5 14h5.8l-1 8 9-12.3h-5.8l1-7.7z"/>
+    </symbol>
+    <symbol id="icon-check-circle" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9.2"/>
+      <path d="M7.8 12.4l2.6 2.6 5.8-6.3"/>
+    </symbol>
+    <symbol id="icon-x-circle" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9.2"/>
+      <path d="M9 9l6 6M15 9l-6 6"/>
+    </symbol>
+    <symbol id="icon-arrow-left" viewBox="0 0 24 24">
+      <path d="M19 12H5"/>
+      <path d="M11 6l-6 6 6 6"/>
+    </symbol>
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+      <path d="M5 12h14"/>
+      <path d="M13 6l6 6-6 6"/>
+    </symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24">
+      <path d="M4 12a8 8 0 0 1 13.6-5.7L20 8.5"/>
+      <path d="M20 4v4.5h-4.5"/>
+      <path d="M20 12a8 8 0 0 1-13.6 5.7L4 15.5"/>
+      <path d="M4 20v-4.5h4.5"/>
+    </symbol>
+    <symbol id="icon-sliders" viewBox="0 0 24 24">
+      <path d="M4 6h9M17 6h3M4 18h3M11 18h9"/>
+      <circle cx="14.5" cy="6" r="2.2"/>
+      <circle cx="8" cy="18" r="2.2"/>
+    </symbol>
+  </defs>
+</svg>
+
 <div class="app" id="app">
 
   <!-- START SCREEN -->
-  <section id="screen-start" class="screen" aria-labelledby="title">
+  <section id="screen-start" class="screen screen-start" aria-labelledby="title">
+    <div class="hero-glow" aria-hidden="true"></div>
+
     <header class="brand">
+      <div class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#icon-pin"></use></svg></div>
       <h1 id="title">Borderline</h1>
       <p class="tagline">borderline playable<span class="tagline-wink" aria-hidden="true">, if you squint</span></p>
     </header>
@@ -22,23 +90,37 @@
       <fieldset class="field-group">
         <legend>Mode</legend>
         <div class="choice-row" role="radiogroup" aria-label="Game mode">
-          <button type="button" class="choice-btn is-selected" data-mode="states" aria-pressed="true">States</button>
-          <button type="button" class="choice-btn" data-mode="counties" aria-pressed="false">Counties</button>
+          <button type="button" class="choice-btn is-selected" data-mode="states" aria-pressed="true">
+            <svg class="icon"><use href="#icon-pin"></use></svg>
+            <span>States</span>
+          </button>
+          <button type="button" class="choice-btn" data-mode="counties" aria-pressed="false">
+            <svg class="icon"><use href="#icon-grid"></use></svg>
+            <span>Counties</span>
+          </button>
         </div>
       </fieldset>
 
       <fieldset class="field-group">
         <legend>Difficulty</legend>
         <div class="choice-row" role="radiogroup" aria-label="Difficulty">
-          <button type="button" class="choice-btn is-selected" data-difficulty="easy" aria-pressed="true">Easy</button>
-          <button type="button" class="choice-btn" data-difficulty="hard" aria-pressed="false">Hard</button>
+          <button type="button" class="choice-btn is-selected" data-difficulty="easy" aria-pressed="true">
+            <svg class="icon"><use href="#icon-leaf"></use></svg>
+            <span>Easy</span>
+          </button>
+          <button type="button" class="choice-btn" data-difficulty="hard" aria-pressed="false">
+            <svg class="icon"><use href="#icon-flame"></use></svg>
+            <span>Hard</span>
+          </button>
         </div>
         <p class="field-hint" id="difficulty-hint">Easy keeps every answered state/county marked on the map. Hard clears each answer once you move on.</p>
       </fieldset>
 
       <fieldset id="state-picker-field" class="field-group" hidden>
         <legend>Pick a state</legend>
-        <select id="state-picker" aria-label="State to play counties for"></select>
+        <div class="select-wrap">
+          <select id="state-picker" aria-label="State to play counties for"></select>
+        </div>
       </fieldset>
 
       <fieldset id="rounds-field" class="field-group">
@@ -52,7 +134,10 @@
 
       <p id="best-score-note" class="best-score-note" aria-live="polite"></p>
 
-      <button type="button" id="btn-play" class="btn-primary">Play</button>
+      <button type="button" id="btn-play" class="btn-primary btn-play">
+        <span id="btn-play-label">Play</span>
+        <svg class="icon"><use href="#icon-arrow-right"></use></svg>
+      </button>
     </div>
 
     <p class="footnote">Map data: US Census Bureau via <a href="https://github.com/topojson/us-atlas" target="_blank" rel="noopener">us-atlas</a>.</p>
@@ -62,21 +147,34 @@
   <section id="screen-game" class="screen" hidden aria-labelledby="prompt-text">
     <div class="hud">
       <div class="hud-left">
-        <span class="hud-label">Find:</span>
+        <span class="hud-label">Find</span>
         <span id="prompt-text" class="hud-prompt">—</span>
       </div>
       <div class="hud-right">
-        <span class="hud-stat"><span class="hud-num" id="stat-score">0</span><span class="hud-unit">score</span></span>
-        <span class="hud-stat"><span class="hud-num" id="stat-round">0/0</span><span class="hud-unit">round</span></span>
-        <span class="hud-stat"><span class="hud-num" id="stat-streak">0</span><span class="hud-unit">streak</span></span>
+        <span class="hud-stat">
+          <svg class="icon hud-icon"><use href="#icon-trophy"></use></svg>
+          <span class="hud-num" id="stat-score">0</span>
+          <span class="hud-unit">score</span>
+        </span>
+        <span class="hud-stat">
+          <svg class="icon hud-icon"><use href="#icon-flag"></use></svg>
+          <span class="hud-num" id="stat-round">0/0</span>
+          <span class="hud-unit">round</span>
+        </span>
+        <span class="hud-stat">
+          <svg class="icon hud-icon"><use href="#icon-zap"></use></svg>
+          <span class="hud-num" id="stat-streak">0</span>
+          <span class="hud-unit">streak</span>
+        </span>
       </div>
     </div>
 
     <div class="map-wrap">
       <canvas id="map-canvas" role="img" aria-label="Map"></canvas>
       <div id="feedback-panel" class="feedback-panel" hidden>
+        <svg class="icon feedback-icon"><use href="#icon-x-circle"></use></svg>
         <p id="feedback-text" class="feedback-text"></p>
-        <button type="button" id="btn-next" class="btn-primary">Next</button>
+        <button type="button" id="btn-next" class="btn-primary btn-next">Next</button>
       </div>
     </div>
 
@@ -84,24 +182,44 @@
     <p class="canvas-alt sr-only">Outline map used for click-based guessing. Screen reader users can play with sighted assistance; each guess result is announced above.</p>
 
     <div class="game-footer">
-      <button type="button" id="btn-quit" class="btn-ghost">Quit to menu</button>
+      <button type="button" id="btn-quit" class="btn-ghost">
+        <svg class="icon"><use href="#icon-arrow-left"></use></svg>
+        <span>Quit to menu</span>
+      </button>
     </div>
   </section>
 
   <!-- END SCREEN -->
   <section id="screen-end" class="screen" hidden aria-labelledby="end-title">
-    <h2 id="end-title">Round complete</h2>
-    <p class="end-score"><span id="end-score">0</span> / <span id="end-total">0</span> <span class="end-percent">(<span id="end-percent">0</span>%)</span></p>
+    <p class="end-eyebrow" id="end-title">Round complete</p>
+
+    <div class="end-ring">
+      <svg class="ring-svg" viewBox="0 0 132 132" aria-hidden="true">
+        <circle class="ring-track" cx="66" cy="66" r="58"/>
+        <circle class="ring-progress" id="end-ring-progress" cx="66" cy="66" r="58"/>
+      </svg>
+      <div class="ring-center">
+        <span class="end-percent-big"><span id="end-percent">0</span><span class="end-percent-sign">%</span></span>
+        <span class="end-score-small"><span id="end-score">0</span> / <span id="end-total">0</span></span>
+      </div>
+    </div>
+
     <p id="end-best" class="end-best"></p>
 
     <div id="end-missed-wrap" class="end-missed-wrap" hidden>
-      <h3>Missed</h3>
+      <h3><svg class="icon"><use href="#icon-x-circle"></use></svg> Missed</h3>
       <ul id="end-missed-list" class="end-missed-list"></ul>
     </div>
 
     <div class="end-actions">
-      <button type="button" id="btn-play-again" class="btn-primary">Play again</button>
-      <button type="button" id="btn-change-mode" class="btn-ghost">Change mode</button>
+      <button type="button" id="btn-play-again" class="btn-primary">
+        <svg class="icon"><use href="#icon-refresh"></use></svg>
+        <span>Play again</span>
+      </button>
+      <button type="button" id="btn-change-mode" class="btn-ghost">
+        <svg class="icon"><use href="#icon-sliders"></use></svg>
+        <span>Change mode</span>
+      </button>
     </div>
   </section>
 
