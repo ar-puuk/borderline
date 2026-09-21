@@ -6,6 +6,7 @@ const suites = [
   ["States mode", require("./states.test.js")],
   ["Counties mode", require("./counties.test.js")],
   ["Interaction (keyboard/touch/theme/sound/retry/share/pan-zoom)", require("./interaction.test.js")],
+  ["PWA (service worker + offline)", require("./pwa.test.js")],
 ];
 
 (async () => {

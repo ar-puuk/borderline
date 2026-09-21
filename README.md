@@ -59,6 +59,19 @@ a sound mute toggle — both follow sensible defaults (OS theme
 preference; sound on) and remember an explicit choice in
 `localStorage` — plus a link back to this repo.
 
+## Installing / offline play
+
+Borderline is an installable PWA: a `manifest.json` and a service worker
+(`sw.js`) precache the app shell (markup, styles, scripts, fonts, and
+the States-mode map data) on first visit, so browsers that support
+installation (Chrome, Edge, and others) offer an "Install" prompt, and
+the game keeps working with no network connection afterward. The
+lazily-loaded `counties-10m.json` gets cached the first time you
+actually switch to Counties mode, same as the network behavior it
+piggybacks on. The service worker is cache-first for same-origin GET
+requests and bumps `CACHE_NAME` in `sw.js` to invalidate old caches on
+a future update.
+
 ## Running it locally
 
 This is a fully static site, but `fetch()` (used to load the map data)
@@ -89,7 +102,9 @@ scattered islands, Virginia's county/city name collisions), county
 label disambiguation, Delaware's round-count clamping, keyboard/touch
 input, Easy/Hard history persistence (verified by reading actual
 rendered canvas pixels, not just "did it crash"), theme/sound
-persistence, retry-missed, and pan/zoom hit-test correctness.
+persistence, retry-missed, and pan/zoom hit-test correctness, and that
+the service worker registers, activates, and actually serves the app
+shell with the network disabled.
 
 A handful of counties have genuinely thin or scattered shapes (a few
 Virginia coastal counties, some Aleutian islands), so the county
@@ -196,6 +211,8 @@ selected state doesn't have enough counties for it, and always leaves
 
 ```
 index.html          entry point (must stay at repo root for Pages)
+manifest.json        PWA install manifest
+sw.js                 service worker (app-shell caching, offline play)
 css/styles.css       all styling, incl. light/dark theme tokens
 js/
   main.js            UI wiring, screen flow, event handling

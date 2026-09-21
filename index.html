@@ -7,6 +7,9 @@
 <meta name="description" content="Borderline: click the map to guess US states and counties. Borderline playable.">
 
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./assets/icon-192.png">
+<meta name="theme-color" content="#0a0b0d">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Borderline">
@@ -371,5 +374,12 @@
 </div>
 
 <script type="module" src="./js/main.js"></script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+</script>
 </body>
 </html>
