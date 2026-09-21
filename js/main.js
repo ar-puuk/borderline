@@ -2,8 +2,12 @@ import { loadMapData } from "./mapData.js";
 import { MapRenderer, COLORS } from "./renderer.js";
 import { Game } from "./game.js";
 import { getBestScore, setBestScore } from "./storage.js";
+import { initTheme } from "./theme.js";
 
 const els = {
+  brandHomeBtn: document.getElementById("brand-home-btn"),
+  themeToggle: document.getElementById("theme-toggle"),
+
   screenStart: document.getElementById("screen-start"),
   screenGame: document.getElementById("screen-game"),
   screenEnd: document.getElementById("screen-end"),
@@ -21,10 +25,12 @@ const els = {
   btnPlay: document.getElementById("btn-play"),
   btnPlayLabel: document.getElementById("btn-play-label"),
 
+  gameContext: document.getElementById("game-context"),
   promptText: document.getElementById("prompt-text"),
   statScore: document.getElementById("stat-score"),
   statRound: document.getElementById("stat-round"),
   statStreak: document.getElementById("stat-streak"),
+  roundProgressFill: document.getElementById("round-progress-fill"),
   canvas: document.getElementById("map-canvas"),
   feedbackPanel: document.getElementById("feedback-panel"),
   feedbackText: document.getElementById("feedback-text"),
@@ -32,6 +38,7 @@ const els = {
   liveRegion: document.getElementById("live-region"),
   btnQuit: document.getElementById("btn-quit"),
 
+  endContext: document.getElementById("end-context"),
   endScore: document.getElementById("end-score"),
   endTotal: document.getElementById("end-total"),
   endPercent: document.getElementById("end-percent"),
@@ -250,6 +257,22 @@ function updateBestScoreNote() {
     : "No best score yet for this mode.";
 }
 
+function chip(iconId, label) {
+  return `<span class="chip"><svg class="icon"><use href="#${iconId}"></use></svg>${label}</span>`;
+}
+
+function contextChipsHtml() {
+  const modeChip =
+    state.mode === "states"
+      ? chip("icon-pin", "States")
+      : chip("icon-grid", `Counties &middot; ${state.stateName}`);
+  const difficultyChip = chip(
+    state.difficulty === "easy" ? "icon-leaf" : "icon-flame",
+    state.difficulty === "easy" ? "Easy" : "Hard"
+  );
+  return modeChip + difficultyChip;
+}
+
 els.modeButtons.forEach((btn) =>
   btn.addEventListener("click", () => selectMode(btn.dataset.mode))
 );
@@ -269,6 +292,12 @@ els.btnQuit.addEventListener("click", () => {
   updateBestScoreNote();
   showScreen("start");
 });
+els.brandHomeBtn.addEventListener("click", () => {
+  clearAdvanceTimer();
+  updateBestScoreNote();
+  showScreen("start");
+});
+initTheme(els.themeToggle);
 
 // ---------- Game screen ----------
 
@@ -298,6 +327,8 @@ function startGame() {
   });
   state.game.order = state.game.order.slice(0, count);
   state.game.total = count;
+
+  els.gameContext.innerHTML = contextChipsHtml();
 
   if (!state.renderer) state.renderer = new MapRenderer(els.canvas);
 
@@ -363,6 +394,7 @@ function updateStats() {
   els.statScore.textContent = String(g.score);
   els.statRound.textContent = `${g.roundNumber}/${g.total}`;
   els.statStreak.textContent = String(g.streak);
+  els.roundProgressFill.style.width = `${(g.roundNumber / g.total) * 100}%`;
 }
 
 function clearAdvanceTimer() {
@@ -416,6 +448,7 @@ function proceed() {
 function endGame() {
   const g = state.game;
   const percent = g.total > 0 ? Math.round((g.score / g.total) * 100) : 0;
+  els.endContext.innerHTML = contextChipsHtml();
   els.endScore.textContent = String(g.score);
   els.endTotal.textContent = String(g.total);
   els.endPercent.textContent = String(percent);

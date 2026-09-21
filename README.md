@@ -38,6 +38,10 @@ the correct answer, marks where you clicked, and waits for you to click
 **Next** (or press Enter/Space) before continuing. The end screen shows
 your final score, percentage, and everything you missed.
 
+The header (present on every screen) has a light/dark theme toggle —
+it follows your OS preference by default and remembers an explicit
+choice in `localStorage` — and a link back to this repo.
+
 ## Running it locally
 
 This is a fully static site, but `fetch()` (used to load the map data)
@@ -66,11 +70,26 @@ so Pages serves the `vendor/` and `data/` directories as-is.
 
 Map boundaries come from the [us-atlas](https://github.com/topojson/us-atlas)
 project, which packages US Census Bureau TIGER/Line boundaries as
-pre-projected (Albers USA) TopoJSON — `states-albers-10m.json` and
-`counties-albers-10m.json`, vendored into `data/`. Because they're
-pre-projected (Alaska and Hawaii insets already baked in), the game
-renders them with `d3.geoPath()` and a null projection — no reprojection
-needed.
+TopoJSON, vendored into `data/`. The two modes use different variants
+deliberately:
+
+- **States mode** uses `states-albers-10m.json`, the *pre-projected*
+  Albers USA composite (with Alaska and Hawaii already rescaled into
+  insets) — the standard, familiar look for a whole-US map. Rendered
+  with `d3.geoPath()` and a null projection (the coordinates are
+  already in pixel space, so nothing more to do).
+- **Counties mode** uses `counties-10m.json`, the *unprojected*
+  (longitude/latitude) topology, and reprojects each state on its own
+  with a Web Mercator projection freshly fitted to that state's extent
+  (`fitMercatorProjection` in `js/geometry.js`). Reusing the nationwide
+  Albers coordinates for a single zoomed-in state showed a visible tilt
+  (Albers Conic converges meridians toward the pole — invisible at
+  continental scale, obvious once you zoom into one, especially
+  rectangular states like Utah or Wyoming). Alaska's Aleutian chain
+  crosses the antimeridian, which breaks a naive Mercator fit, so that
+  function also detects the crossing (via `d3.geoBounds`, which is
+  spherical-aware) and rotates the projection to recenter on the
+  state's own longitude before fitting.
 
 `topojson-client` (for converting TopoJSON to GeoJSON, and merging county
 geometries into a state outline) and `d3-geo` (for path generation and
@@ -130,16 +149,17 @@ selected state doesn't have enough counties for it, and always leaves
 
 ```
 index.html          entry point (must stay at repo root for Pages)
-css/styles.css       all styling
+css/styles.css       all styling, incl. light/dark theme tokens
 js/
   main.js            UI wiring, screen flow, event handling
   game.js             round/scoring state machine
   mapData.js          loads topology, builds prompt lists + labels
-  geometry.js          fit-to-canvas transforms, hit-testing
+  geometry.js          fit-to-canvas transforms, hit-testing, projections
   renderer.js          canvas drawing (DPR-aware, resize-aware)
   storage.js           best-score persistence (localStorage, try/catch-wrapped)
-data/                vendored TopoJSON (states + counties, Albers-projected)
-vendor/              vendored, bundled topojson-client + d3-geo (ES modules)
+  theme.js             light/dark theme toggle + system-preference sync
+data/                vendored TopoJSON (nationwide Albers + unprojected counties)
+vendor/              vendored, bundled topojson-client + d3-geo (ES modules), fonts
 ```
 
 ## Accessibility
@@ -148,6 +168,8 @@ The canvas has `role="img"` with a live-updating `aria-label` naming the
 current prompt, plus a visually-hidden explanatory paragraph and an
 `aria-live="polite"` region that announces the result of every guess.
 Interactive elements (mode/round buttons, Next, Play, etc.) are real
-`<button>`/`<select>` elements with visible focus outlines, and a miss
-can be advanced past with the keyboard (Enter or Space) as well as by
-clicking Next.
+`<button>` elements with visible focus outlines; the state picker is a
+custom ARIA listbox-button combobox (arrow keys, Home/End, type-ahead,
+Escape) since a native `<select>`'s open popup can't be restyled to
+match the theme. A miss can be advanced past with the keyboard (Enter
+or Space) as well as by clicking Next.
