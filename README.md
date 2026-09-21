@@ -25,7 +25,10 @@ to however many counties the state actually has — e.g. Delaware only
 offers "All" since it has 3). Score, round progress, and streak are shown
 throughout; your best score per mode/round-count/state/difficulty is
 remembered locally (`localStorage`) and shown on the start screen and end
-screen.
+screen. Across every game you've ever played, the start screen also
+surfaces a "you struggle most with" list (scoped to the selected state
+in Counties mode) once you've missed something enough times for it to
+be meaningful — not just what happened in your last round.
 
 **Easy or Hard** — Easy keeps every state/county you've answered marked
 on the map (green fill+outline for correct, red for incorrect), so the
@@ -203,6 +206,7 @@ js/
   storage.js           best-score persistence (localStorage, try/catch-wrapped)
   theme.js             light/dark theme toggle + system-preference sync
   audio.js             synthesized hit/miss tones (Web Audio) + haptics
+  stats.js             lifetime per-item miss-rate tracking ("weak spots")
 data/                vendored TopoJSON (nationwide Albers + unprojected counties)
 vendor/              vendored, bundled topojson-client + d3-geo (ES modules), fonts
 tests/               dev-only Playwright regression suite (see Testing above)

@@ -561,6 +561,32 @@ body {
   text-align: center;
 }
 
+.weak-spots {
+  text-align: center;
+}
+
+.weak-spots-label {
+  margin: 0 0 0.5rem;
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.weak-spots-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.weak-spots-chips .chip {
+  background: var(--miss-soft);
+  border-color: color-mix(in srgb, var(--miss) 35%, var(--border));
+  color: var(--ink);
+}
+
 .btn-primary {
   display: inline-flex;
   align-items: center;

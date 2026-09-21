@@ -214,6 +214,45 @@ module.exports = async function interactionTests(browser, baseUrl) {
     await page.close();
   }
 
+  // --- Weak-spots: lifetime miss-rate tracking, scoped per mode/state ---
+  {
+    const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+    await page.goto(baseUrl + "/index.html", { waitUntil: "networkidle" });
+    assert(
+      (await page.getAttribute("#weak-spots", "hidden")) !== null,
+      "weak spots should start hidden with no history"
+    );
+
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "borderline:stats:v1",
+        JSON.stringify({
+          "states:West Virginia": { label: "West Virginia", attempts: 4, misses: 3 },
+          "states:Texas": { label: "Texas", attempts: 5, misses: 0 },
+          "states:Iowa": { label: "Iowa", attempts: 1, misses: 1 }, // below the 2-attempt floor
+          "counties:Texas:Harris County": { label: "Harris County", attempts: 3, misses: 2 },
+        })
+      );
+    });
+    await page.reload({ waitUntil: "networkidle" });
+    await page.waitForTimeout(150);
+
+    const stateChips = await page.locator("#weak-spots-chips .chip").allTextContents();
+    assert(stateChips.includes("West Virginia"), "should surface a real weak spot");
+    assert(!stateChips.includes("Texas"), "a 0%-miss item should not appear");
+    assert(!stateChips.includes("Iowa"), "a single-attempt item should not appear (below the floor)");
+
+    await page.click('[data-mode="counties"]');
+    await page.click("#state-picker-btn");
+    await page.click('li[data-value="Texas"]');
+    await page.waitForTimeout(150);
+    const countyChips = await page.locator("#weak-spots-chips .chip").allTextContents();
+    assert(countyChips.includes("Harris County"), "county weak spots should be scoped to the selected state");
+    assert(!countyChips.includes("West Virginia"), "states data should not leak into county scope");
+    console.log("  weak spots: OK");
+    await page.close();
+  }
+
   // --- Pan/zoom: hit-testing stays correct after zooming onto the target ---
   // Retries with a fresh round on failure: this is testing that the zoom
   // anchor math keeps a point stable, not that every random target survives

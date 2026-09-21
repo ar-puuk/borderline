@@ -4,6 +4,7 @@ import { Game } from "./game.js";
 import { getBestScore, setBestScore } from "./storage.js";
 import { initTheme } from "./theme.js";
 import { playHit, playMiss, vibrateHit, vibrateMiss, isSoundEnabled, toggleSound } from "./audio.js";
+import { recordAttempt, getWeakest } from "./stats.js";
 
 const els = {
   brandHomeBtn: document.getElementById("brand-home-btn"),
@@ -24,6 +25,8 @@ const els = {
   roundsRow: document.getElementById("rounds-row"),
   roundButtons: Array.from(document.querySelectorAll("[data-rounds]")),
   bestScoreNote: document.getElementById("best-score-note"),
+  weakSpots: document.getElementById("weak-spots"),
+  weakSpotsChips: document.getElementById("weak-spots-chips"),
   btnPlay: document.getElementById("btn-play"),
   btnPlayLabel: document.getElementById("btn-play-label"),
 
@@ -321,6 +324,15 @@ function updateBestScoreNote() {
   els.bestScoreNote.textContent = best
     ? `Best: ${best.score}/${best.total} (${best.percent}%)`
     : "No best score yet for this mode.";
+  updateWeakSpots();
+}
+
+function updateWeakSpots() {
+  const weakest = getWeakest(state.mode, state.stateName);
+  els.weakSpots.hidden = weakest.length === 0;
+  els.weakSpotsChips.innerHTML = weakest
+    .map((w) => `<span class="chip">${w.label}</span>`)
+    .join("");
 }
 
 function chip(iconId, label) {
@@ -506,6 +518,7 @@ function handleCanvasPoint(clientX, clientY) {
   const point = state.renderer.toMapPoint(clientX, clientY);
   const hit = state.renderer.pointInFeature(g.current.feature, point);
   const result = g.guess(hit, point);
+  recordAttempt(state.mode, state.stateName, result.target.name, hit);
   updateStats();
   if (state.difficulty === "hard") {
     showLatestResultOnly();
