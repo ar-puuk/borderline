@@ -23,6 +23,7 @@ export class Game {
     this.missed = [];
     this.awaitingNext = false;
     this.lastResult = null; // { hit, target, guessPoint }
+    this.history = []; // { feature, name, hit } for every round played so far
   }
 
   get current() {
@@ -57,6 +58,7 @@ export class Game {
     }
     this.awaitingNext = true;
     this.lastResult = { hit, target, guessPoint: { x: mapX, y: mapY } };
+    this.history.push({ feature: target.feature, name: target.name, hit });
     return this.lastResult;
   }
 

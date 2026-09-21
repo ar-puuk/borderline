@@ -12,6 +12,7 @@ const els = {
   modeButtons: Array.from(document.querySelectorAll("[data-mode]")),
   statePickerField: document.getElementById("state-picker-field"),
   statePicker: document.getElementById("state-picker"),
+  roundsField: document.getElementById("rounds-field"),
   roundsRow: document.getElementById("rounds-row"),
   roundButtons: Array.from(document.querySelectorAll("[data-rounds]")),
   bestScoreNote: document.getElementById("best-score-note"),
@@ -42,7 +43,8 @@ const state = {
   mapData: null,
   mode: "states",
   stateName: null,
-  roundLabel: "25",
+  roundLabel: "all",
+  countyRoundLabel: "25",
   renderer: null,
   game: null,
   awaitingConfirmation: false,
@@ -72,12 +74,17 @@ function populateStatePicker() {
 }
 
 function currentPoolLength() {
+  if (!state.mapData) return 0;
   if (state.mode === "states") return state.mapData.playableStates.length;
   const list = state.mapData.countiesByState.get(state.stateName);
   return list ? list.length : 0;
 }
 
 function updateRoundsAvailability() {
+  if (state.mode === "states") {
+    updateBestScoreNote();
+    return;
+  }
   const len = currentPoolLength();
   let selectedStillValid = true;
   for (const btn of els.roundButtons) {
@@ -102,11 +109,21 @@ function selectMode(mode) {
     btn.setAttribute("aria-pressed", String(on));
   }
   els.statePickerField.hidden = mode !== "counties";
+  els.roundsField.hidden = mode === "states";
+  if (mode === "states") {
+    state.roundLabel = "all";
+  } else {
+    state.roundLabel = state.countyRoundLabel;
+    for (const btn of els.roundButtons) {
+      btn.classList.toggle("is-selected", btn.dataset.rounds === state.roundLabel);
+    }
+  }
   updateRoundsAvailability();
 }
 
 function selectRoundLabel(label) {
   state.roundLabel = label;
+  state.countyRoundLabel = label;
   for (const btn of els.roundButtons) {
     const on = btn.dataset.rounds === label;
     btn.classList.toggle("is-selected", on);
@@ -188,11 +205,20 @@ function startGame() {
   nextRound();
 }
 
+function syncHistoryLayers() {
+  const layers = state.game.history.map((h) => ({
+    feature: h.feature,
+    stroke: h.hit ? COLORS.hit : COLORS.miss,
+    lineWidth: 2,
+  }));
+  state.renderer.setLayers(layers);
+}
+
 function nextRound() {
   clearAdvanceTimer();
   els.feedbackPanel.hidden = true;
   state.awaitingConfirmation = false;
-  state.renderer.setLayers([]);
+  syncHistoryLayers();
   state.renderer.setMarker(null);
 
   const target = state.game.next();
@@ -227,19 +253,14 @@ function handleCanvasPoint(clientX, clientY) {
   const { x, y } = clientPointToMap(els.canvas, state.renderer.transform, clientX, clientY);
   const result = g.guess(x, y);
   updateStats();
+  syncHistoryLayers();
 
   if (result.hit) {
-    state.renderer.setLayers([
-      { feature: result.target.feature, fill: "rgba(51, 209, 122, 0.35)", stroke: COLORS.hit, lineWidth: 2.5 },
-    ]);
     state.renderer.setMarker(null);
     state.renderer.render();
     announce(`Correct — that's ${result.target.name}. Streak ${g.streak}.`);
     state.advanceTimer = setTimeout(() => proceed(), 650);
   } else {
-    state.renderer.setLayers([
-      { feature: result.target.feature, fill: "rgba(232, 84, 74, 0.3)", stroke: COLORS.miss, lineWidth: 2.5 },
-    ]);
     state.renderer.setMarker({ x, y });
     state.renderer.render();
     announce(`Not quite. That was ${result.target.name}.`);
@@ -324,4 +345,5 @@ async function boot() {
   }
 }
 
+selectMode(state.mode);
 boot();
