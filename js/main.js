@@ -54,6 +54,8 @@ const els = {
   btnPlayAgain: document.getElementById("btn-play-again"),
   btnChangeMode: document.getElementById("btn-change-mode"),
   btnRetryMissed: document.getElementById("btn-retry-missed"),
+  btnShare: document.getElementById("btn-share"),
+  btnShareLabel: document.getElementById("btn-share-label"),
 };
 
 const state = {
@@ -724,6 +726,53 @@ document.addEventListener("keydown", (e) => {
 
 els.btnPlayAgain.addEventListener("click", () => startGame());
 els.btnRetryMissed.addEventListener("click", () => retryMissed());
+
+function shareUrl() {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.search = "";
+  return url.toString();
+}
+
+function buildShareText() {
+  const g = state.game;
+  const percent = g.total > 0 ? Math.round((g.score / g.total) * 100) : 0;
+  const modeLabel = state.mode === "states" ? "States" : `Counties · ${state.stateName}`;
+  const grid = g.history.map((h) => (h.hit ? "🟩" : "🟥")).join("");
+  return `Borderline ${modeLabel} ${g.score}/${g.total} (${percent}%)\n${grid}\n${shareUrl()}`;
+}
+
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // Clipboard API can be unavailable (older browsers) or blocked
+    // (insecure context, permissions) - fall back to the classic trick.
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+}
+
+els.btnShare.addEventListener("click", async () => {
+  const copied = await copyToClipboard(buildShareText());
+  els.btnShareLabel.textContent = copied ? "Copied!" : "Couldn't copy";
+  setTimeout(() => {
+    els.btnShareLabel.textContent = "Copy result";
+  }, 2000);
+});
 
 window.addEventListener("resize", () => {
   if (!els.screenGame.hidden && state.renderer) state.renderer.resize();

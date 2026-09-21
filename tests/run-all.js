@@ -5,7 +5,7 @@ const { startServer } = require("./lib/serve");
 const suites = [
   ["States mode", require("./states.test.js")],
   ["Counties mode", require("./counties.test.js")],
-  ["Interaction (keyboard/touch/theme/sound/retry/pan-zoom)", require("./interaction.test.js")],
+  ["Interaction (keyboard/touch/theme/sound/retry/share/pan-zoom)", require("./interaction.test.js")],
 ];
 
 (async () => {

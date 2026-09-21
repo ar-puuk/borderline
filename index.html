@@ -125,6 +125,10 @@
     <symbol id="icon-frame" viewBox="0 0 24 24">
       <path d="M4 9V4.5h5M20 9V4.5h-5M4 15v4.5h5M20 15v4.5h-5"/>
     </symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24">
+      <rect x="9" y="9" width="11" height="11" rx="1.6"/>
+      <path d="M6 15H5a1.6 1.6 0 0 1-1.6-1.6V5A1.6 1.6 0 0 1 5 3.4h8.4A1.6 1.6 0 0 1 15 5v1"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -338,6 +342,10 @@
           <button type="button" id="btn-change-mode" class="btn-ghost">
             <svg class="icon"><use href="#icon-sliders"></use></svg>
             <span>Change mode</span>
+          </button>
+          <button type="button" id="btn-share" class="btn-ghost">
+            <svg class="icon"><use href="#icon-copy"></use></svg>
+            <span id="btn-share-label">Copy result</span>
           </button>
         </div>
       </div>

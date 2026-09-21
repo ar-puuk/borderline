@@ -1011,7 +1011,13 @@ body {
 
 .end-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.end-actions .btn-primary,
+.end-actions .btn-ghost {
+  white-space: nowrap;
 }
 
 @media (max-width: 480px) {

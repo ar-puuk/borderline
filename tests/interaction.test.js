@@ -183,6 +183,37 @@ module.exports = async function interactionTests(browser, baseUrl) {
     await page.close();
   }
 
+  // --- Copy result produces a Wordle-style share summary on the clipboard ---
+  {
+    const context = await browser.newContext({
+      viewport: { width: 1200, height: 900 },
+      permissions: ["clipboard-read", "clipboard-write"],
+    });
+    const page = await context.newPage();
+    await page.goto(baseUrl + "/index.html", { waitUntil: "networkidle" });
+    await page.click('[data-rounds="10"]');
+    await page.click("#btn-play");
+    await page.waitForSelector("#screen-game:not([hidden])");
+    for (let i = 0; i < 10; i++) {
+      const b = await page.locator("#map-canvas").boundingBox();
+      await page.mouse.click(b.x + b.width * 0.97, b.y + b.height * 0.03);
+      await page.waitForTimeout(1700);
+    }
+    await page.waitForSelector("#screen-end:not([hidden])", { timeout: 8000 });
+    await page.click("#btn-share");
+    await page.waitForTimeout(150);
+    assert(
+      (await page.textContent("#btn-share-label")) === "Copied!",
+      "share button should confirm the copy"
+    );
+    const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+    assert(clipboard.startsWith("Borderline States 0/10 (0%)"), `unexpected share header: ${clipboard}`);
+    assert(clipboard.includes("🟥".repeat(10)), "share grid should show 10 miss emoji for an all-miss game");
+    assert(clipboard.includes(baseUrl), "share text should include the game's URL");
+    console.log("  copy result: OK");
+    await page.close();
+  }
+
   // --- Pan/zoom: hit-testing stays correct after zooming onto the target ---
   // Retries with a fresh round on failure: this is testing that the zoom
   // anchor math keeps a point stable, not that every random target survives

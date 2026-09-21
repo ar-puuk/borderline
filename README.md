@@ -40,8 +40,10 @@ buzz, then auto-advances after a longer pause — long enough to actually
 register what you got wrong — or click **Next** (or press Enter/Space)
 to skip ahead immediately. The end screen shows your final score,
 percentage, and everything you missed — with a **Retry these** button
-that jumps
-straight into a focused round of just what you got wrong.
+that jumps straight into a focused round of just what you got wrong,
+and a **Copy result** button that puts a Wordle-style summary (score,
+a 🟩/🟥 grid of the round in order, and a link back to the game) on
+your clipboard to share.
 
 **Zoom and pan** the map to get a closer look at fiddly shapes (tiny
 islands, thin coastal counties): scroll or pinch to zoom in anchored
