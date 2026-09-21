@@ -3,10 +3,12 @@ import { MapRenderer, COLORS } from "./renderer.js";
 import { Game } from "./game.js";
 import { getBestScore, setBestScore } from "./storage.js";
 import { initTheme } from "./theme.js";
+import { playHit, playMiss, vibrateHit, vibrateMiss, isSoundEnabled, toggleSound } from "./audio.js";
 
 const els = {
   brandHomeBtn: document.getElementById("brand-home-btn"),
   themeToggle: document.getElementById("theme-toggle"),
+  soundToggle: document.getElementById("sound-toggle"),
 
   screenStart: document.getElementById("screen-start"),
   screenGame: document.getElementById("screen-game"),
@@ -299,6 +301,18 @@ els.brandHomeBtn.addEventListener("click", () => {
 });
 initTheme(els.themeToggle);
 
+function syncSoundToggle() {
+  const enabled = isSoundEnabled();
+  els.soundToggle.setAttribute("data-muted", String(!enabled));
+  els.soundToggle.setAttribute("aria-pressed", String(!enabled));
+  els.soundToggle.setAttribute("aria-label", enabled ? "Mute sound" : "Unmute sound");
+}
+els.soundToggle.addEventListener("click", () => {
+  toggleSound();
+  syncSoundToggle();
+});
+syncSoundToggle();
+
 // ---------- Game screen ----------
 
 function buildPool() {
@@ -421,11 +435,15 @@ function handleCanvasPoint(clientX, clientY) {
   if (result.hit) {
     state.renderer.setMarker(null);
     state.renderer.render();
+    playHit();
+    vibrateHit();
     announce(`Correct — that's ${result.target.name}. Streak ${g.streak}.`);
     state.advanceTimer = setTimeout(() => proceed(), 650);
   } else {
     state.renderer.setMarker(point);
     state.renderer.render();
+    playMiss();
+    vibrateMiss();
     announce(`Not quite. That was ${result.target.name}.`);
     els.feedbackText.textContent = `That was ${result.target.name}.`;
     els.feedbackPanel.hidden = false;

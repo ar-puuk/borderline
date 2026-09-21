@@ -257,6 +257,18 @@ body {
   display: block;
 }
 
+.icon-sound-off {
+  display: none;
+}
+
+#sound-toggle[data-muted="true"] .icon-sound-on {
+  display: none;
+}
+
+#sound-toggle[data-muted="true"] .icon-sound-off {
+  display: block;
+}
+
 /* ---------- Start screen ---------- */
 
 .start-layout {
