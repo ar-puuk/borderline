@@ -35,10 +35,12 @@ guesses (the original, tougher design).
 
 A hit briefly flashes the state green and auto-advances (with a short
 chime and a light haptic tap on supporting devices). A miss highlights
-the correct answer, marks where you clicked, plays a lower buzz, and
-waits for you to click **Next** (or press Enter/Space) before
-continuing. The end screen shows your final score, percentage, and
-everything you missed — with a **Retry these** button that jumps
+the correct answer in red and marks where you clicked, plays a lower
+buzz, then auto-advances after a longer pause — long enough to actually
+register what you got wrong — or click **Next** (or press Enter/Space)
+to skip ahead immediately. The end screen shows your final score,
+percentage, and everything you missed — with a **Retry these** button
+that jumps
 straight into a focused round of just what you got wrong.
 
 **Zoom and pan** the map to get a closer look at fiddly shapes (tiny

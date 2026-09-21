@@ -492,11 +492,12 @@ function handleCanvasPoint(clientX, clientY) {
     state.renderer.render();
     playMiss();
     vibrateMiss();
-    announce(`Not quite. That was ${result.target.name}.`);
-    els.feedbackText.textContent = `That was ${result.target.name}.`;
+    announce(`Missed. The correct answer was ${result.target.name}.`);
+    els.feedbackText.textContent = "Missed!";
     els.feedbackPanel.hidden = false;
     state.awaitingConfirmation = true;
     els.btnNext.focus();
+    state.advanceTimer = setTimeout(() => proceed(), 1600);
   }
 }
 
