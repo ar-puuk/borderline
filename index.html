@@ -308,7 +308,13 @@
       </div>
 
       <div id="end-missed-wrap" class="end-missed-wrap" hidden>
-        <h3><svg class="icon"><use href="#icon-x-circle"></use></svg> Missed</h3>
+        <div class="missed-header">
+          <h3><svg class="icon"><use href="#icon-x-circle"></use></svg> Missed</h3>
+          <button type="button" id="btn-retry-missed" class="btn-ghost btn-sm">
+            <svg class="icon"><use href="#icon-refresh"></use></svg>
+            <span>Retry these</span>
+          </button>
+        </div>
         <ul id="end-missed-list" class="end-missed-list"></ul>
       </div>
     </div>

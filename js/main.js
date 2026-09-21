@@ -50,6 +50,7 @@ const els = {
   endMissedList: document.getElementById("end-missed-list"),
   btnPlayAgain: document.getElementById("btn-play-again"),
   btnChangeMode: document.getElementById("btn-change-mode"),
+  btnRetryMissed: document.getElementById("btn-retry-missed"),
 };
 
 const state = {
@@ -64,6 +65,7 @@ const state = {
   game: null,
   awaitingConfirmation: false,
   advanceTimer: null,
+  lastMissedPool: null,
 };
 
 const ALL_SCREENS = () => [els.screenStart, els.screenGame, els.screenEnd];
@@ -363,12 +365,21 @@ function startGame() {
   const pool = buildPool();
   if (pool.length === 0) return;
   const count = resolveCount(pool.length);
+  launchGame(pool, count, state.roundLabel);
+}
 
+function retryMissed() {
+  const pool = state.lastMissedPool;
+  if (!pool || pool.length === 0) return;
+  launchGame(pool, pool.length, "retry");
+}
+
+function launchGame(pool, count, roundLabel) {
   state.game = new Game({
     mode: state.mode,
     stateName: state.stateName,
     pool,
-    roundLabel: state.roundLabel,
+    roundLabel,
   });
   state.game.order = state.game.order.slice(0, count);
   state.game.total = count;
@@ -498,27 +509,27 @@ function proceed() {
 function endGame() {
   const g = state.game;
   const percent = g.total > 0 ? Math.round((g.score / g.total) * 100) : 0;
+  const isRetrySession = g.roundLabel === "retry";
   els.endContext.innerHTML = contextChipsHtml();
   els.endScore.textContent = String(g.score);
   els.endTotal.textContent = String(g.total);
   els.endPercent.textContent = String(percent);
   els.endBarFill.style.width = "0%";
 
-  const best = setBestScore(
-    state.mode,
-    state.roundLabel,
-    state.stateName,
-    state.difficulty,
-    g.score,
-    g.total
-  );
+  // A "retry missed" session's pool is a one-off subset, so comparing it
+  // against the mode's normal best score wouldn't mean much - skip it.
+  const best = isRetrySession
+    ? null
+    : setBestScore(state.mode, g.roundLabel, state.stateName, state.difficulty, g.score, g.total);
   els.endBest.textContent = best
     ? best.isNewBest
       ? "New best score!"
       : `Best: ${best.score}/${best.total} (${best.percent}%)`
     : "";
 
-  if (g.missed.length > 0) {
+  state.lastMissedPool = g.history.filter((h) => !h.hit).map((h) => ({ name: h.name, feature: h.feature }));
+
+  if (state.lastMissedPool.length > 0) {
     els.endMissedWrap.hidden = false;
     els.endMissedList.innerHTML = g.missed.map((n) => `<li>${n}</li>`).join("");
   } else {
@@ -549,6 +560,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 els.btnPlayAgain.addEventListener("click", () => startGame());
+els.btnRetryMissed.addEventListener("click", () => retryMissed());
 
 window.addEventListener("resize", () => {
   if (!els.screenGame.hidden && state.renderer) state.renderer.resize();

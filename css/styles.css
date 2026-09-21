@@ -936,6 +936,14 @@ body {
   border-radius: var(--radius);
 }
 
+.missed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+}
+
 .end-missed-wrap h3 {
   display: flex;
   align-items: center;
@@ -947,7 +955,7 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin: 0 0 0.75rem;
+  margin: 0;
 }
 
 .end-missed-wrap h3 .icon {
